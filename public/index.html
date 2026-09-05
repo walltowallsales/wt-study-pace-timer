@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0f172a" />
+<title>Study Pace Timer</title>
+<style>
+:root{--bg:#f8fafc;--panel:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb;--accent2:#1d4ed8;--good:#15803d;--warn:#b45309;--bad:#b91c1c;--chip:#eff6ff;--shadow:0 10px 30px rgba(15,23,42,.08)}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit} button{cursor:pointer}
+.app{max-width:1180px;margin:0 auto;padding:24px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.brand h1{font-size:24px;margin:0}.brand p{margin:4px 0 0;color:var(--muted);font-size:14px}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{border:1px solid var(--line);background:#fff;padding:10px 16px;border-radius:999px;color:var(--muted);font-weight:700}.tab.active{background:var(--ink);color:white;border-color:var(--ink)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:white}.field input[type=number]{width:105px}.grow{flex:1;min-width:220px}.btn{border:none;border-radius:10px;padding:10px 14px;font-weight:800;background:var(--ink);color:white}.btn.secondary{background:white;color:var(--ink);border:1px solid var(--line)}.btn.accent{background:var(--accent)}.btn.danger{background:#fee2e2;color:var(--bad)}.btn.big{padding:14px 22px;font-size:17px}
+.section-title{font-size:18px;margin:0 0 12px}.hint{font-size:13px;color:var(--muted);line-height:1.45}.metricbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.metric{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fbfdff}.metric .k{font-size:12px;color:var(--muted);font-weight:700}.metric .v{font-size:20px;font-weight:900;margin-top:2px}
+.lesson-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}.card{border:1px solid var(--line);border-radius:14px;padding:14px;background:white}.card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card-title{font-weight:900}.q{font-size:14px;color:#334155;margin-top:5px;line-height:1.45}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chip{background:var(--chip);color:#1e40af;border-radius:999px;padding:5px 8px;font-size:12px;font-weight:800}.chip.gray{background:#f1f5f9;color:#475569}.chip.gold{background:#fef3c7;color:#92400e}.chip.green{background:#dcfce7;color:#166534}.card-controls{display:grid;grid-template-columns:120px 105px auto auto;gap:8px;margin-top:12px;align-items:end}.smallselect,.smallinput{border:1px solid var(--line);border-radius:9px;padding:8px;background:white;width:100%}.switch{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:700}
+.plan-table{width:100%;border-collapse:collapse}.plan-table th,.plan-table td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}.plan-table th{font-size:12px;color:var(--muted);text-transform:uppercase}.num{text-align:right!important;font-variant-numeric:tabular-nums}
+.conduct-wrap{max-width:900px;margin:0 auto}.clockbox{text-align:center;padding:20px}.elapsed{font-size:58px;line-height:1;font-weight:950;letter-spacing:-.04em;font-variant-numeric:tabular-nums}.total{color:var(--muted);font-weight:800;margin-top:6px}.pace{display:inline-block;margin-top:12px;padding:8px 12px;border-radius:999px;font-weight:900}.pace.good{background:#dcfce7;color:var(--good)}.pace.warn{background:#fef3c7;color:var(--warn)}.pace.bad{background:#fee2e2;color:var(--bad)}
+.section-divider{margin:8px 0 2px;padding:9px 12px;border-left:4px solid var(--accent);background:#f8fafc;border-radius:8px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#475569}.section-pace-box{margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:14px;background:#f8fafc}.section-pace-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.section-pace-name{font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.05em;color:#475569}.section-pace-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.section-pace-status{font-weight:950}.section-progress{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:10px}.section-progress>div{height:100%;background:var(--accent);width:0}.section-label{margin:0 0 10px;font-size:14px;font-weight:900;color:#475569;text-transform:uppercase;letter-spacing:.05em}.plan-section td{background:#f8fafc;color:#475569;font-size:12px!important;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.current{padding:26px}.eyebrow{font-size:12px;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}.current h2{font-size:34px;margin:6px 0 8px}.current .question{font-size:20px;line-height:1.45;color:#334155}.current-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}.current-meta .metric{background:white}.conduct-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}.progress{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:20px}.progress>div{height:100%;background:var(--accent);width:0}.landmarks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}.landmark{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}.landmark .t{font-weight:950}.landmark .l{font-size:11px;color:var(--muted);margin-top:2px}
+.hidden{display:none!important}.notice{padding:12px 14px;border-radius:12px;background:#eff6ff;color:#1e3a8a;font-size:14px;margin:12px 0}.footer{color:var(--muted);font-size:12px;text-align:center;margin:22px}.importbox textarea{width:100%;min-height:170px}.urlrow{display:flex;gap:8px}.urlrow input{flex:1}.subtle{font-size:12px;color:var(--muted)}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.metricbar,.current-meta,.landmarks,.section-pace-grid{grid-template-columns:repeat(2,1fr)}.card-controls{grid-template-columns:1fr 1fr}.elapsed{font-size:48px}.current h2{font-size:28px}.app{padding:14px}.topbar{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><h1>Study Pace Timer</h1><p>Prepare the lesson. Allocate the hour. Conduct with confidence.</p></div>
+    <div class="tabs">
+      <button class="tab active" data-view="prepare">1. Prepare</button>
+      <button class="tab" data-view="plan">2. Timing Plan</button>
+      <button class="tab" data-view="conduct">3. Conduct</button>
+    </div>
+  </div>
+
+  <section id="prepare" class="view">
+    <div class="grid">
+      <div class="panel">
+        <h2 class="section-title">Lesson setup</h2>
+        <div class="field grow"><label>Article title</label><input id="titleInput"></div>
+        <div class="row" style="margin-top:12px">
+          <div class="field"><label>Total minutes</label><input id="totalMin" type="number" min="10" max="120" step="1"></div>
+          <div class="field"><label>Introduction</label><input id="introMin" type="number" min="0" max="10" step="0.25"></div>
+          <div class="field"><label>Review</label><input id="reviewMin" type="number" min="0" max="20" step="0.25"></div>
+          <div class="field"><label>Conclusion</label><input id="conclusionMin" type="number" min="0" max="10" step="0.25"></div>
+        </div>
+        <div class="metricbar">
+          <div class="metric"><div class="k">Discussion pool</div><div class="v" id="discussionPool">—</div></div>
+          <div class="metric"><div class="k">Discussion units</div><div class="v" id="unitCount">—</div></div>
+          <div class="metric"><div class="k">Read scriptures</div><div class="v" id="scriptureCount">—</div></div>
+          <div class="metric"><div class="k">Visual / box items</div><div class="v" id="visualCount">—</div></div>
+        </div>
+        <div class="notice">Tip: mark important paragraphs as <b>Weighty</b> or <b>Very Weighty</b>. Locked items will not be compressed when you run behind.</div>
+      </div>
+      <div class="panel importbox">
+        <h2 class="section-title">Import</h2>
+        <div class="field"><label>WOL article URL</label><div class="urlrow"><input id="urlInput" value="https://wol.jw.org/en/wol/d/r1/lp-e/2026445"><button class="btn accent" id="importUrl">Import URL</button><button class="btn secondary" id="loadDemo">Load sample</button></div></div><div id="importStatus" class="subtle" style="margin-top:8px"></div>
+        <p class="hint">This hosted version uses its own server to fetch the WOL article. After import, review the detected paragraphs, questions, subheadings, Read scriptures, pictures, and boxes before conducting.</p>
+        <div class="field"><label>Or paste a simple outline</label><textarea id="pasteInput" placeholder="Example:\n1-2 | (a) First question? (b) Second question? | read\n3 | Question for paragraph 3\n4 | Question for paragraph 4 | picture"></textarea></div>
+        <button class="btn accent" id="parsePaste">Import pasted outline</button>
+        <p class="subtle">Format: paragraph label | question | optional flags: read, picture, box, weighty</p>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:18px">
+      <div class="row" style="justify-content:space-between"><h2 class="section-title" style="margin:0">Discussion units</h2><button class="btn secondary" id="addUnit">+ Add unit</button></div>
+      <div id="lessonList" class="lesson-list"></div>
+    </div>
+  </section>
+
+  <section id="plan" class="view hidden">
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><div><h2 class="section-title" style="margin:0">Timing plan</h2><p class="hint" style="margin:4px 0 0">Fixed time is protected first; remaining time is distributed by weight and complexity.</p></div><button class="btn accent" id="recalculate">Recalculate</button></div>
+      <div class="metricbar">
+        <div class="metric"><div class="k">Total</div><div class="v" id="planTotal">—</div></div>
+        <div class="metric"><div class="k">Intro</div><div class="v" id="planIntro">—</div></div>
+        <div class="metric"><div class="k">Review + conclusion</div><div class="v" id="planEnding">—</div></div>
+        <div class="metric"><div class="k">Paragraph discussion</div><div class="v" id="planDiscussion">—</div></div>
+      </div>
+      <div style="overflow:auto;margin-top:15px"><table class="plan-table"><thead><tr><th>Unit</th><th>Features</th><th class="num">Allocated</th><th class="num">Target finish</th></tr></thead><tbody id="planBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="conduct" class="view hidden">
+    <div class="conduct-wrap">
+      <div class="panel clockbox">
+        <div class="elapsed" id="elapsedClock">00:00</div>
+        <div class="total" id="totalClock">of 60:00</div>
+        <div id="paceBadge" class="pace good">On pace</div>
+        <div class="progress"><div id="progressBar"></div></div>
+      </div>
+      <div class="panel current" style="margin-top:16px">
+        <div class="section-label" id="currentSection"></div><div class="eyebrow" id="phaseLabel">Introduction</div>
+        <h2 id="currentLabel">Opening comments</h2>
+        <div class="question" id="currentQuestion">Introduce the lesson and focus.</div>
+        <div class="chips" id="currentChips"></div>
+        <div class="current-meta">
+          <div class="metric"><div class="k">Allocated</div><div class="v" id="allocatedTime">1:30</div></div>
+          <div class="metric"><div class="k">Target finish</div><div class="v" id="targetFinish">1:30</div></div>
+          <div class="metric"><div class="k">Suggested remaining</div><div class="v" id="suggestedRemaining">1:30</div></div>
+        </div>
+        <div class="section-pace-box" id="sectionPaceBox">
+          <div class="section-pace-head"><div class="section-pace-name" id="sectionPaceName">Section pacing</div><div class="pace good" id="sectionPaceBadge" style="margin-top:0">On pace</div></div>
+          <div class="section-pace-grid">
+            <div class="metric"><div class="k">Section target finish</div><div class="v" id="sectionTargetFinish">—</div></div>
+            <div class="metric"><div class="k">Time left in section</div><div class="v" id="sectionTimeLeft">—</div></div>
+            <div class="metric"><div class="k">Items remaining</div><div class="v" id="sectionItemsLeft">—</div></div>
+          </div>
+          <div class="section-progress"><div id="sectionProgressBar"></div></div>
+        </div>
+        <div class="conduct-controls">
+          <button class="btn secondary big" id="prevBtn">← Previous</button>
+          <button class="btn big" id="startPause">Start</button>
+          <button class="btn secondary big" id="holdBtn">Hold</button>
+          <button class="btn accent big" id="nextBtn">Next →</button>
+        </div>
+        <div class="conduct-controls">
+          <button class="btn secondary" id="plus30">+30 sec to this item</button>
+          <button class="btn secondary" id="minus30">−30 sec from this item</button>
+          <button class="btn danger" id="resetBtn">Reset session</button>
+        </div>
+      </div>
+      <div class="landmarks" id="landmarks"></div>
+    </div>
+  </section>
+  <div class="footer">Standalone prototype · Data is saved in this browser using local storage.</div>
+</div>
+<script>
+const sampleUnits = [
+ {label:'1–2',section:'Introduction',q:'(a) How does Jehovah care for the spiritual needs of his people today? (b) What will we consider regarding Christian meetings?',weight:'normal',read:true,picture:false,box:false,locked:false},
+ {label:'3',section:'REMEMBER THAT JEHOVAH IS SPEAKING TO US',q:'How does Jehovah speak to us, and how do his servants make good use of his Word?',weight:'normal'},
+ {label:'4',section:'REMEMBER THAT JEHOVAH IS SPEAKING TO US',q:'What idea do the words “hear” and “listen” convey?',weight:'normal'},
+ {label:'5',section:'WHY SHOULD WE LISTEN CAREFULLY AT MEETINGS?',q:'What does our love for Jehovah move us to do?',weight:'normal',read:true},
+ {label:'6',section:'WHY SHOULD WE LISTEN CAREFULLY AT MEETINGS?',q:'At our meetings, what do we learn about helping others?',weight:'light'},
+ {label:'7',section:'WHY SHOULD WE LISTEN CAREFULLY AT MEETINGS?',q:'Why is it vital that we keep listening to Jehovah?',weight:'weighty'},
+ {label:'8',section:'HOW TO HELP OTHERS TO LISTEN AT MEETINGS',q:'Why should brothers who teach from the platform continue to improve in their speaking ability?',weight:'normal'},
+ {label:'9',section:'HOW TO HELP OTHERS TO LISTEN AT MEETINGS',q:'Why is it important for a talk to be easy to follow?',weight:'normal'},
+ {label:'10',section:'HOW TO HELP OTHERS TO LISTEN AT MEETINGS',q:'Why is it important to get excited about the material?',weight:'normal'},
+ {label:'11',section:'HOW TO HELP OTHERS TO LISTEN AT MEETINGS',q:'Why is it helpful to give practical, specific suggestions in talks?',weight:'weighty',read:true},
+ {label:'12',section:'HOW TO HELP OTHERS TO LISTEN AT MEETINGS',q:'Why is it best to speak naturally when giving a talk?',weight:'light'},
+ {label:'13',section:'HOW TO HELP OTHERS TO LISTEN AT MEETINGS',q:'Why should teachers in the congregation ask experienced speakers for counsel?',weight:'normal',picture:true},
+ {label:'14',section:'HOW TO BECOME A BETTER LISTENER',q:'Why should we cultivate the attitude of the writer of Psalm 119?',weight:'weighty',read:true},
+ {label:'15',section:'HOW TO BECOME A BETTER LISTENER',q:'How can we maintain our appreciation for the spiritual food we receive at meetings?',weight:'normal'},
+ {label:'16',section:'HOW TO BECOME A BETTER LISTENER',q:'What has helped some longtime servants of Jehovah to keep listening attentively at meetings?',weight:'weighty',box:true},
+ {label:'17',section:'HOW TO BECOME A BETTER LISTENER',q:'What can you do to listen attentively at meetings?',weight:'weighty',picture:true},
+ {label:'18',section:'KEEP LISTENING TO JEHOVAH',q:'Why should we keep listening at meetings?',weight:'normal'}
+];
+const defaultReviewQs=['Why should we listen at meetings?','How can brothers who teach at meetings help others to listen?','How can you become a better listener?'];
+let state={title:'Pay Attention to How You Listen',totalMin:60,introMin:1.5,reviewMin:6,conclusionMin:1.25,reviewQs:structuredClone(defaultReviewQs),units:structuredClone(sampleUnits)};
+let plan=[]; let session={running:false,hold:false,startTs:null,pausedMs:0,pauseStart:null,index:0,manualElapsed:0};
+const $=id=>document.getElementById(id); const weightMap={light:.8,normal:1,weighty:1.3,very:1.6};
+function fmt(sec){sec=Math.max(0,Math.round(sec));return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`}
+function save(){localStorage.setItem('studyPaceTimerState',JSON.stringify(state))}
+function load(){try{const x=JSON.parse(localStorage.getItem('studyPaceTimerState'));if(x&&x.units)state=x}catch(e){} if(!Array.isArray(state.reviewQs)||!state.reviewQs.length)state.reviewQs=structuredClone(defaultReviewQs)}
+function syncTop(){ $('titleInput').value=state.title;$('totalMin').value=state.totalMin;$('introMin').value=state.introMin;$('reviewMin').value=state.reviewMin;$('conclusionMin').value=state.conclusionMin; updateMetrics();}
+function normalizeUnit(u){return {label:u.label||'New',section:u.section||'',q:u.q||'',weight:u.weight||'normal',read:!!u.read,picture:!!u.picture,box:!!u.box,locked:!!u.locked,manualSec:u.manualSec??null}}
+function countParts(q){let m=(q.match(/\([abc]\)/gi)||[]).length; return Math.max(1,m)}
+function overhead(u){return (u.read?45:0)+(u.picture?40:0)+(u.box?45:0)+Math.max(0,countParts(u.q)-1)*25}
+function updateMetrics(){let fixed=(+state.introMin + +state.reviewMin + +state.conclusionMin)*60; $('discussionPool').textContent=fmt(+state.totalMin*60-fixed);$('unitCount').textContent=state.units.length;$('scriptureCount').textContent=state.units.filter(x=>x.read).length;$('visualCount').textContent=state.units.filter(x=>x.picture||x.box).length}
+function renderUnits(){const el=$('lessonList');el.innerHTML='';let lastSection=null;state.units.forEach((u,i)=>{u=normalizeUnit(u);state.units[i]=u;if(u.section&&u.section!==lastSection){const h=document.createElement('div');h.className='section-divider';h.textContent=u.section;el.appendChild(h);lastSection=u.section}const d=document.createElement('div');d.className='card';d.innerHTML=`<div class="card-head"><div><div class="card-title">Paragraph ${esc(u.label)}</div><div class="q">${esc(u.q)}</div><div class="chips">${u.read?'<span class="chip green">Read scripture</span>':''}${u.picture?'<span class="chip gold">Picture</span>':''}${u.box?'<span class="chip gold">Box</span>':''}<span class="chip gray">${countParts(u.q)} question${countParts(u.q)>1?' parts':''}</span>${u.locked?'<span class="chip">Locked</span>':''}</div></div><button class="btn danger" data-remove="${i}">Remove</button></div>
+        <div class="card-controls"><div class="field"><label>Weight</label><select class="smallselect" data-weight="${i}"><option value="light">Light</option><option value="normal">Normal</option><option value="weighty">Weighty</option><option value="very">Very Weighty</option></select></div><label class="switch"><input type="checkbox" data-read="${i}" ${u.read?'checked':''}> Read</label><label class="switch"><input type="checkbox" data-picture="${i}" ${u.picture?'checked':''}> Picture</label><label class="switch"><input type="checkbox" data-box="${i}" ${u.box?'checked':''}> Box</label><label class="switch"><input type="checkbox" data-lock="${i}" ${u.locked?'checked':''}> Lock</label><button class="btn secondary" data-edit="${i}">Edit</button></div>`;el.appendChild(d);d.querySelector(`[data-weight="${i}"]`).value=u.weight});
+ el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{state.units.splice(+b.dataset.remove,1);save();renderUnits();updateMetrics()});
+ el.querySelectorAll('[data-weight]').forEach(s=>s.onchange=()=>{state.units[+s.dataset.weight].weight=s.value;save();renderUnits()});
+ el.querySelectorAll('[data-read]').forEach(s=>s.onchange=()=>toggle(+s.dataset.read,'read',s.checked));el.querySelectorAll('[data-picture]').forEach(s=>s.onchange=()=>toggle(+s.dataset.picture,'picture',s.checked));el.querySelectorAll('[data-box]').forEach(s=>s.onchange=()=>toggle(+s.dataset.box,'box',s.checked));el.querySelectorAll('[data-lock]').forEach(s=>s.onchange=()=>toggle(+s.dataset.lock,'locked',s.checked));
+ el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{let i=+b.dataset.edit,u=state.units[i];let label=prompt('Paragraph label:',u.label);if(label===null)return;let section=prompt('Subheading / section:',u.section||'');if(section===null)return;let q=prompt('Question:',u.q);if(q===null)return;u.label=label.trim()||u.label;u.section=section.trim();u.q=q.trim();save();renderUnits()});}
+function toggle(i,k,v){state.units[i][k]=v;save();renderUnits();updateMetrics()}
+function calculatePlan(){state.units=state.units.map(normalizeUnit);let total=+state.totalMin*60,intro=+state.introMin*60,review=+state.reviewMin*60,concl=+state.conclusionMin*60;let available=total-intro-review-concl;if(available<60)available=60;
+ let lockedTotal=0, flex=[]; state.units.forEach((u,i)=>{if(u.locked&&u.manualSec!=null)lockedTotal+=u.manualSec;else flex.push(i)});let flexAvail=Math.max(0,available-lockedTotal);let totalOver=flex.reduce((a,i)=>a+overhead(state.units[i]),0);let basePool=Math.max(0,flexAvail-totalOver);let pts=flex.reduce((a,i)=>a+weightMap[state.units[i].weight],0)||1;
+ plan=[];let cumulative=intro; plan.push({type:'intro',label:'Introduction',q:'Introduce the lesson and focus.',sec:intro,target:cumulative,locked:true});
+ state.units.forEach((u,i)=>{let sec=u.locked&&u.manualSec!=null?u.manualSec:overhead(u)+basePool*(weightMap[u.weight]/pts);sec=Math.max(55,sec);cumulative+=sec;plan.push({type:'unit',unitIndex:i,label:`Paragraph ${u.label}`,section:u.section,q:u.q,sec,target:cumulative,locked:u.locked,read:u.read,picture:u.picture,box:u.box,weight:u.weight});});
+ let reviewQs=state.reviewQs||defaultReviewQs;let perReview=review/reviewQs.length;reviewQs.forEach((q,j)=>{cumulative+=perReview;plan.push({type:'review',label:`Review ${j+1}`,q,sec:perReview,target:cumulative,locked:true})});cumulative+=concl;plan.push({type:'conclusion',label:'Conclusion',q:'Conclude the study and transition smoothly.',sec:concl,target:cumulative,locked:true});
+ // normalize drift to total by adjusting unlocked units
+ let drift=total-cumulative;if(Math.abs(drift)>.5){let ids=plan.map((p,i)=>({p,i})).filter(x=>x.p.type==='unit'&&!x.p.locked);if(ids.length){let each=drift/ids.length;ids.forEach(x=>x.p.sec=Math.max(45,x.p.sec+each));let c=0;plan.forEach(p=>{c+=p.sec;p.target=c})}}
+ renderPlan();return plan}
+function sectionInfoAt(idx){
+ let p=plan[idx]; if(!p)return null;
+ let key=p.type==='unit'?(p.section||'Discussion'):p.type==='review'?'HOW WOULD YOU ANSWER?':p.type==='intro'?'Introduction':p.type==='conclusion'?'Conclusion':p.label;
+ let start=idx,end=idx;
+ while(start>0){let x=plan[start-1],k=x.type==='unit'?(x.section||'Discussion'):x.type==='review'?'HOW WOULD YOU ANSWER?':x.type==='intro'?'Introduction':x.type==='conclusion'?'Conclusion':x.label;if(k!==key)break;start--}
+ while(end<plan.length-1){let x=plan[end+1],k=x.type==='unit'?(x.section||'Discussion'):x.type==='review'?'HOW WOULD YOU ANSWER?':x.type==='intro'?'Introduction':x.type==='conclusion'?'Conclusion':x.label;if(k!==key)break;end++}
+ let scheduledStart=start?plan[start-1].target:0,scheduledFinish=plan[end].target;
+ return {key,start,end,scheduledStart,scheduledFinish,duration:scheduledFinish-scheduledStart};
+}
+function renderPlan(){let body=$('planBody');body.innerHTML='';let lastSection=null;plan.forEach((p,idx)=>{if(p.type==='unit'&&p.section&&p.section!==lastSection){let info=sectionInfoAt(idx);let sr=document.createElement('tr');sr.className='plan-section';sr.innerHTML=`<td colspan="3">${esc(p.section)}</td><td class="num">Section target ${fmt(info.scheduledFinish)}</td>`;body.appendChild(sr);lastSection=p.section}let features=[];if(p.type==='unit'){if(p.read)features.push('Read');if(p.picture)features.push('Picture');if(p.box)features.push('Box');features.push(p.weight.replace('very','Very weighty'))}else features.push('Protected');let tr=document.createElement('tr');tr.innerHTML=`<td><b>${esc(p.label)}</b></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.target)}</td>`;body.appendChild(tr)});$('planTotal').textContent=fmt(state.totalMin*60);$('planIntro').textContent=fmt(state.introMin*60);$('planEnding').textContent=fmt((+state.reviewMin + +state.conclusionMin)*60);$('planDiscussion').textContent=fmt(state.totalMin*60-(+state.introMin + +state.reviewMin + +state.conclusionMin)*60)}
+function currentElapsed(){if(!session.running)return session.manualElapsed;if(session.hold)return session.manualElapsed;return session.manualElapsed+(Date.now()-session.startTs)/1000}
+function redistributeFrom(idx,elapsed){let current=plan[idx];let delta=elapsed-(idx?plan[idx-1].target:0); if(idx>=plan.length-1)return; // actual duration on current
+ let targetDur=current.sec, overrun=delta-targetDur;if(Math.abs(overrun)<1)return;
+ let remaining=plan.slice(idx+1);let compressible=remaining.filter(p=>p.type==='unit'&&!p.locked);if(!compressible.length)return;let amount=overrun;let denom=compressible.reduce((a,p)=>a+p.sec,0)||1;compressible.forEach(p=>{let share=amount*(p.sec/denom);p.sec=Math.max(45,p.sec-share)});let c=elapsed;for(let j=idx+1;j<plan.length;j++){c+=plan[j].sec;plan[j].target=c}}
+function renderConduct(){if(!plan.length)calculatePlan();let p=plan[Math.min(session.index,plan.length-1)],elapsed=currentElapsed();$('elapsedClock').textContent=fmt(elapsed);$('totalClock').textContent=`of ${fmt(state.totalMin*60)}`;$('progressBar').style.width=`${Math.min(100,elapsed/(state.totalMin*60)*100)}%`;let target=p.target;let badge=$('paceBadge');let overallDiff=(session.index?plan[session.index-1].target:0)-elapsed;if(session.index===0)overallDiff=0;badge.className='pace '+(overallDiff>=-30?'good':overallDiff>=-120?'warn':'bad');badge.textContent=session.index===0?'On pace':overallDiff>=0?`${fmt(Math.abs(overallDiff))} ahead`:`${fmt(Math.abs(overallDiff))} behind`;
+ $('currentSection').textContent=p.type==='unit'&&p.section?p.section:(p.type==='review'?'HOW WOULD YOU ANSWER?':'');$('currentSection').style.display=$('currentSection').textContent?'block':'none';$('phaseLabel').textContent=p.type==='unit'?'Discussion':p.type[0].toUpperCase()+p.type.slice(1);$('currentLabel').textContent=p.label;$('currentQuestion').textContent=p.q;$('allocatedTime').textContent=fmt(p.sec);$('targetFinish').textContent=fmt(target);$('suggestedRemaining').textContent=fmt(Math.max(0,target-elapsed));let chips=[];if(p.read)chips.push('<span class="chip green">Read scripture before question</span>');if(p.picture)chips.push('<span class="chip gold">Comment on picture</span>');if(p.box)chips.push('<span class="chip gold">Discuss box</span>');if(p.locked)chips.push('<span class="chip">Protected</span>');$('currentChips').innerHTML=chips.join('');
+ let si=sectionInfoAt(session.index);if(si){$('sectionPaceBox').style.display='block';$('sectionPaceName').textContent=si.key;$('sectionTargetFinish').textContent=fmt(si.scheduledFinish);$('sectionTimeLeft').textContent=fmt(Math.max(0,si.scheduledFinish-elapsed));$('sectionItemsLeft').textContent=String(si.end-session.index+1);let expectedStart=session.index?plan[session.index-1].target:0;let sd=expectedStart-elapsed;let sb=$('sectionPaceBadge');sb.className='pace '+(sd>=-20?'good':sd>=-75?'warn':'bad');sb.textContent=session.index===si.start&&Math.abs(sd)<2?'Starting section':sd>=0?`${fmt(Math.abs(sd))} ahead in section`:`${fmt(Math.abs(sd))} behind in section`;let plannedInto=Math.max(0,expectedStart-si.scheduledStart);$('sectionProgressBar').style.width=`${Math.min(100,si.duration?plannedInto/si.duration*100:0)}%`}else $('sectionPaceBox').style.display='none';
+ $('startPause').textContent=session.running?'Pause':'Start';$('holdBtn').textContent=session.hold?'Resume':'Hold';$('prevBtn').disabled=session.index===0;$('nextBtn').textContent=session.index===plan.length-1?'Finish':'Next →';renderLandmarks()}
+function renderLandmarks(){let marks=[.25,.5,.75,.9];$('landmarks').innerHTML=marks.map(m=>{let t=state.totalMin*60*m;let item=plan.find(p=>p.target>=t)||plan[plan.length-1];return `<div class="landmark"><div class="t">${fmt(t)}</div><div class="l">around ${esc(item.label)}</div></div>`}).join('')}
+function switchView(v){document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));$(v).classList.remove('hidden');document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===v));if(v==='plan')calculatePlan();if(v==='conduct'){calculatePlan();renderConduct()}}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function resetSession(){session={running:false,hold:false,startTs:null,pausedMs:0,pauseStart:null,index:0,manualElapsed:0};calculatePlan();renderConduct()}
+
+async function importFromUrl(){
+ const url=$('urlInput').value.trim(), status=$('importStatus'), btn=$('importUrl');
+ if(!url)return alert('Paste a WOL article URL first.');
+ status.textContent='Importing article…'; btn.disabled=true;
+ try{
+   const r=await fetch('/api/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok)throw new Error(data.error||`Import failed (${r.status})`);
+   if(!Array.isArray(data.units)||!data.units.length)throw new Error('No discussion paragraphs were detected.');
+   state.title=data.title||state.title;
+   state.units=data.units.map(normalizeUnit);
+   if(Array.isArray(data.reviewQuestions)&&data.reviewQuestions.length)state.reviewQs=data.reviewQuestions.slice(0,3);
+   save();syncTop();renderUnits();calculatePlan();resetSession();
+   status.textContent=`Imported ${state.units.length} discussion units${data.reviewQuestions?.length?` and ${Math.min(3,data.reviewQuestions.length)} review questions`:''}. Please review the detected items below.`;
+ }catch(e){
+   console.error(e); status.textContent='Import failed: '+e.message;
+   alert('The article could not be imported automatically. You can still use Load sample or paste an outline.\n\n'+e.message);
+ }finally{btn.disabled=false}
+}
+
+function parseOutline(){let lines=$('pasteInput').value.split(/\n+/).map(x=>x.trim()).filter(Boolean);if(!lines.length)return alert('Paste at least one outline line.');let units=[],section='';lines.forEach(line=>{if(line.startsWith('##')){section=line.replace(/^##+\s*/,'').trim();return}let parts=line.split('|').map(x=>x.trim()),flags=(parts[2]||'').toLowerCase();units.push(normalizeUnit({label:parts[0],section:parts[3]||section,q:parts[1]||'',read:flags.includes('read'),picture:flags.includes('picture'),box:flags.includes('box'),weight:flags.includes('very')?'very':flags.includes('weighty')?'weighty':'normal'}))});state.units=units;save();renderUnits();updateMetrics()}
+load();syncTop();renderUnits();calculatePlan();renderConduct();
+['titleInput','totalMin','introMin','reviewMin','conclusionMin'].forEach(id=>$(id).addEventListener('change',()=>{state.title=$('titleInput').value;state.totalMin=+$('totalMin').value;state.introMin=+$('introMin').value;state.reviewMin=+$('reviewMin').value;state.conclusionMin=+$('conclusionMin').value;save();updateMetrics();calculatePlan()}));
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('recalculate').onclick=calculatePlan;$('parsePaste').onclick=parseOutline;$('importUrl').onclick=importFromUrl;$('loadDemo').onclick=()=>{state={title:'Pay Attention to How You Listen',totalMin:60,introMin:1.5,reviewMin:6,conclusionMin:1.25,reviewQs:structuredClone(defaultReviewQs),units:structuredClone(sampleUnits)};save();syncTop();renderUnits();calculatePlan();alert('Sample lesson loaded.')};$('addUnit').onclick=()=>{state.units.push(normalizeUnit({label:String(state.units.length+1),q:'New discussion question'}));save();renderUnits();updateMetrics()};
+$('startPause').onclick=()=>{if(session.running){session.manualElapsed=currentElapsed();session.running=false;session.startTs=null}else{session.running=true;session.hold=false;session.startTs=Date.now()}renderConduct()};$('holdBtn').onclick=()=>{if(!session.running)return;if(!session.hold){session.manualElapsed=currentElapsed();session.hold=true}else{session.hold=false;session.startTs=Date.now()}renderConduct()};$('nextBtn').onclick=()=>{let elapsed=currentElapsed();if(session.index<plan.length-1){redistributeFrom(session.index,elapsed);session.index++;renderConduct()}else{session.running=false;session.manualElapsed=elapsed;alert(`Session complete: ${fmt(elapsed)}`);renderConduct()}};$('prevBtn').onclick=()=>{if(session.index>0){session.index--;renderConduct()}};$('plus30').onclick=()=>{let p=plan[session.index];p.sec+=30;for(let j=session.index;j<plan.length;j++)plan[j].target+=30;renderConduct()};$('minus30').onclick=()=>{let p=plan[session.index];let d=Math.min(30,Math.max(0,p.sec-30));p.sec-=d;for(let j=session.index;j<plan.length;j++)plan[j].target-=d;renderConduct()};$('resetBtn').onclick=()=>{if(confirm('Reset the live session clock?'))resetSession()};
+setInterval(()=>{if(!$('conduct').classList.contains('hidden'))renderConduct()},250);
+</script>
+</body>
+</html>
