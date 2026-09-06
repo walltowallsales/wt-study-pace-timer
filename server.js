@@ -7,7 +7,7 @@ app.use(express.json({ limit: '128kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const clean = (s = '') => s.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
-const looksLikeQuestion = t => /\?$/.test(t) || /^\(?[abc]\)?[.)]?\s+/i.test(t);
+const looksLikeQuestion = t => /\?/.test(t) || /^\(?[abc]\)?[.)]?\s+/i.test(t);
 const isReviewHeading = t => /how would you answer|review questions?/i.test(t);
 const isParagraphLabel = t => /^(?:\d{1,2})(?:\s*[-–]\s*\d{1,2})?$/.test(t);
 
@@ -69,19 +69,28 @@ function parseWol(html) {
 
     // Detect a paragraph number either in a dedicated child/span or at the start.
     let label = '';
+    let labelFromLeadingText = false;
     const numberCandidate = clean($el.find('.parNum, .pNum, .num, span').first().text());
     if (isParagraphLabel(numberCandidate)) label = numberCandidate.replace(/\s+/g,'');
     if (!label) {
       const m = text.match(/^\s*(\d{1,2}(?:\s*[-–]\s*\d{1,2})?)\s*[.]?\s+(.*)$/s);
-      if (m) { label = m[1].replace(/\s+/g,''); text = clean(m[2]); }
+      if (m) {
+        label = m[1].replace(/\s+/g,'');
+        text = clean(m[2]);
+        labelFromLeadingText = true;
+      }
     }
 
     if (label) {
       flush(); reviewMode = false;
+      // On WOL the discussion question is commonly on the same line as the
+      // paragraph number (for example: "3. How does Jehovah speak to us?").
+      // Preserve that remainder as the question instead of throwing it away.
+      const questionOnNumberLine = labelFromLeadingText && /\?/.test(text) ? text : '';
       current = {
         label,
         section: currentSection,
-        q: '',
+        q: questionOnNumberLine,
         weight: 'normal',
         read: /\bread\b/i.test(text) && /(?:psalm|proverbs|matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|jude|revelation|genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|chronicles|ezra|nehemiah|esther|job|ecclesiastes|song|isaiah|jeremiah|lamentations|ezekiel|daniel|hosea|joel|amos|obadiah|jonah|micah|nahum|habakkuk|zephaniah|haggai|zechariah|malachi)/i.test(text),
         picture: false,
