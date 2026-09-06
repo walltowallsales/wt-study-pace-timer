@@ -1,0 +1,14 @@
+If your first Render deployment failed, this corrected package fixes an Express 5 startup-route incompatibility in server.js.
+
+EASIEST UPDATE ON GITHUB
+1. Open your GitHub repository.
+2. Open server.js.
+3. Click the pencil (Edit this file).
+4. Near the bottom, replace:
+   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+   with:
+   app.get(/.*/, (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+5. Click Commit changes.
+6. Render should automatically redeploy. If it does not, in Render choose Manual Deploy > Deploy latest commit.
+
+Alternatively, upload/replace all files from this corrected package.
