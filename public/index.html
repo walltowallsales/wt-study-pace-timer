@@ -18,6 +18,26 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 .section-divider{margin:8px 0 2px;padding:9px 12px;border-left:4px solid var(--accent);background:#f8fafc;border-radius:8px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#475569}.section-pace-box{margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:14px;background:#f8fafc}.section-pace-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.section-pace-name{font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.05em;color:#475569}.section-pace-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.section-pace-status{font-weight:950}.section-progress{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:10px}.section-progress>div{height:100%;background:var(--accent);width:0}.section-label{margin:0 0 10px;font-size:14px;font-weight:900;color:#475569;text-transform:uppercase;letter-spacing:.05em}.plan-section td{background:#f8fafc;color:#475569;font-size:12px!important;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.current{padding:26px}.eyebrow{font-size:12px;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}.current h2{font-size:34px;margin:6px 0 8px}.current .question{font-size:20px;line-height:1.45;color:#334155}.current-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}.current-meta .metric{background:white}.conduct-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}.progress{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:20px}.progress>div{height:100%;background:var(--accent);width:0}.landmarks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}.landmark{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}.landmark .t{font-weight:950}.landmark .l{font-size:11px;color:var(--muted);margin-top:2px}
 .hidden{display:none!important}.notice{padding:12px 14px;border-radius:12px;background:#eff6ff;color:#1e3a8a;font-size:14px;margin:12px 0}.footer{color:var(--muted);font-size:12px;text-align:center;margin:22px}.importbox textarea{width:100%;min-height:170px}.urlrow{display:flex;gap:8px}.urlrow input{flex:1}.subtle{font-size:12px;color:var(--muted)}
 @media(max-width:800px){.grid{grid-template-columns:1fr}.metricbar,.current-meta,.landmarks,.section-pace-grid{grid-template-columns:repeat(2,1fr)}.card-controls{grid-template-columns:1fr 1fr}.elapsed{font-size:48px}.current h2{font-size:28px}.app{padding:14px}.topbar{align-items:flex-start;flex-direction:column}}
+@media(max-width:600px){
+  body{background:#fff}
+  .app{padding:8px 8px 92px;max-width:none}
+  .topbar{margin-bottom:8px;gap:8px}.brand{display:none}.tabs{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;position:sticky;top:0;z-index:30;background:#fff;padding:4px 0 7px}.tab{padding:9px 4px;font-size:12px;border-radius:10px;white-space:nowrap}
+  #conduct .conduct-wrap{max-width:none}
+  #conduct .panel{box-shadow:none;border-radius:14px}
+  #conduct .clockbox{padding:12px 12px 10px;border-color:#dbe4ef;position:sticky;top:52px;z-index:20;background:rgba(255,255,255,.97);backdrop-filter:blur(8px)}
+  #conduct .elapsed{font-size:52px;letter-spacing:-.05em}.total{font-size:12px;margin-top:2px}.pace{margin-top:7px;padding:6px 10px;font-size:13px}.progress{height:7px;margin-top:10px}
+  #conduct .current{margin-top:8px!important;padding:15px 13px 18px;border-left:0;border-right:0}
+  #conduct .section-label{font-size:11px;line-height:1.35;margin-bottom:6px;padding:7px 9px;background:#f8fafc;border-radius:8px}.eyebrow{font-size:10px}.current h2{font-size:29px;line-height:1.05;margin:5px 0 9px}.current .question{font-size:19px;line-height:1.38;color:#1e293b}
+  #conduct .chips{margin-top:9px}.chip{font-size:11px;padding:5px 7px}
+  #conduct .current-meta{grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}.current-meta .metric{padding:9px 6px;text-align:center;border-radius:10px}.metric .k{font-size:9px;line-height:1.15;text-transform:uppercase;letter-spacing:.02em}.metric .v{font-size:18px;line-height:1.1}
+  #conduct .section-pace-box{margin-top:10px;padding:10px;border-radius:12px}.section-pace-head{margin-bottom:7px}.section-pace-name{font-size:10px;line-height:1.25}.section-pace-head .pace{font-size:11px;padding:5px 7px}.section-pace-grid{grid-template-columns:repeat(3,1fr);gap:5px}.section-pace-grid .metric{padding:7px 4px;text-align:center;border-radius:9px}.section-pace-grid .metric .k{font-size:8px}.section-pace-grid .metric .v{font-size:15px}.section-progress{height:6px;margin-top:7px}
+  #conduct .primary-conduct-controls{position:fixed;left:0;right:0;bottom:0;z-index:40;margin:0;padding:8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));display:grid;grid-template-columns:.8fr 1fr .8fr 1.35fr;gap:6px;background:rgba(255,255,255,.97);border-top:1px solid var(--line);backdrop-filter:blur(10px)}
+  #conduct .primary-conduct-controls .btn{min-height:52px;padding:8px 5px;font-size:14px;border-radius:12px;line-height:1.15}#conduct #nextBtn{font-size:17px}
+  #conduct .secondary-conduct-controls{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.secondary-conduct-controls .btn{padding:10px 6px;font-size:12px}.secondary-conduct-controls #resetBtn{grid-column:1/-1}
+  #conduct .landmarks{grid-template-columns:repeat(4,minmax(90px,1fr));overflow-x:auto;gap:6px;margin-top:8px;padding-bottom:4px}.landmark{padding:8px 5px;min-width:90px}.landmark .t{font-size:13px}.landmark .l{font-size:9px}
+  #conduct+.footer,.footer{display:none}
+}
+@media(max-width:380px){#conduct .primary-conduct-controls{grid-template-columns:.75fr .9fr .75fr 1.25fr}.current h2{font-size:27px}.current .question{font-size:18px}.primary-conduct-controls .btn{font-size:12px!important}#conduct #nextBtn{font-size:15px!important}}
 </style>
 </head>
 <body>
@@ -115,13 +135,13 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
           </div>
           <div class="section-progress"><div id="sectionProgressBar"></div></div>
         </div>
-        <div class="conduct-controls">
+        <div class="conduct-controls primary-conduct-controls">
           <button class="btn secondary big" id="prevBtn">← Previous</button>
           <button class="btn big" id="startPause">Start</button>
           <button class="btn secondary big" id="holdBtn">Hold</button>
           <button class="btn accent big" id="nextBtn">Next →</button>
         </div>
-        <div class="conduct-controls">
+        <div class="conduct-controls secondary-conduct-controls">
           <button class="btn secondary" id="plus30">+30 sec to this item</button>
           <button class="btn secondary" id="minus30">−30 sec from this item</button>
           <button class="btn danger" id="resetBtn">Reset session</button>
