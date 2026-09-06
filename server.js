@@ -61,42 +61,57 @@ function parseWol(html) {
       continue;
     }
 
-    // Question blocks are commonly marked by class names containing qu/question.
-    if ((/\bqu\b|question/.test(cls) || looksLikeQuestion(text)) && current) {
-      if (!/^\d+\.?\s/.test(text)) current.q += (current.q ? ' ' : '') + text;
-      continue;
+    // IMPORTANT: recognize a new numbered question BEFORE treating a block as
+    // a generic question belonging to the current paragraph. WOL commonly
+    // renders lines such as "4. What idea ...?" as ordinary paragraph blocks.
+    // If generic-question detection runs first, paragraph 4 can be swallowed
+    // by paragraph 3 and later fall back to "Discuss paragraph 4."
+    let label = '';
+    let questionOnNumberLine = '';
+
+    // First prefer the complete visible text. This works whether the paragraph
+    // number is plain text or wrapped in a span.
+    const leading = text.match(/^\s*(\d{1,2}(?:\s*[-–]\s*\d{1,2})?)\s*[.]?\s+(.*)$/s);
+    if (leading && isParagraphLabel(leading[1])) {
+      label = leading[1].replace(/\s+/g, '');
+      const remainder = clean(leading[2]);
+      if (/\?/.test(remainder)) questionOnNumberLine = remainder;
     }
 
-    // Detect a paragraph number either in a dedicated child/span or at the start.
-    let label = '';
-    let labelFromLeadingText = false;
-    const numberCandidate = clean($el.find('.parNum, .pNum, .num, span').first().text());
-    if (isParagraphLabel(numberCandidate)) label = numberCandidate.replace(/\s+/g,'');
+    // Fallback for layouts where the number is isolated in its own element and
+    // the leading-text regex does not see it as part of the visible text.
     if (!label) {
-      const m = text.match(/^\s*(\d{1,2}(?:\s*[-–]\s*\d{1,2})?)\s*[.]?\s+(.*)$/s);
-      if (m) {
-        label = m[1].replace(/\s+/g,'');
-        text = clean(m[2]);
-        labelFromLeadingText = true;
+      const numberCandidate = clean($el.find('.parNum, .pNum, .num, span').first().text());
+      if (isParagraphLabel(numberCandidate)) {
+        label = numberCandidate.replace(/\s+/g, '');
+        let remainder = text;
+        const escaped = numberCandidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        remainder = clean(remainder.replace(new RegExp(`^\\s*${escaped}\\s*[.]?\\s*`), ''));
+        if (/\?/.test(remainder)) questionOnNumberLine = remainder;
       }
     }
 
     if (label) {
       flush(); reviewMode = false;
-      // On WOL the discussion question is commonly on the same line as the
-      // paragraph number (for example: "3. How does Jehovah speak to us?").
-      // Preserve that remainder as the question instead of throwing it away.
-      const questionOnNumberLine = labelFromLeadingText && /\?/.test(text) ? text : '';
       current = {
         label,
         section: currentSection,
         q: questionOnNumberLine,
         weight: 'normal',
         read: /\bread\b/i.test(text) && /(?:psalm|proverbs|matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|jude|revelation|genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|chronicles|ezra|nehemiah|esther|job|ecclesiastes|song|isaiah|jeremiah|lamentations|ezekiel|daniel|hosea|joel|amos|obadiah|jonah|micah|nahum|habakkuk|zephaniah|haggai|zechariah|malachi)/i.test(text),
-        picture: false,
-        box: false,
+        picture: /see also picture/i.test(text),
+        box: /see also (?:the )?box/i.test(text),
         locked: false
       };
+      continue;
+    }
+
+    // Only after ruling out a new numbered paragraph do we attach a question
+    // block to the currently open unit.
+    if ((/\bqu\b|question/.test(cls) || looksLikeQuestion(text)) && current) {
+      if (!/^your answers?$/i.test(text) && text.length < 700) {
+        current.q += (current.q ? ' ' : '') + text;
+      }
       continue;
     }
 
@@ -104,7 +119,6 @@ function parseWol(html) {
       if (/illustration|picture|image|caption|figcaption/.test(cls) || $el.find('img,figure').length) current.picture = true;
       if (/box|sidebar|boxText/i.test(cls)) current.box = true;
       if (/\bread\b/i.test(text) && /\d+:\d+/.test(text)) current.read = true;
-      if (looksLikeQuestion(text) && text.length < 700) current.q += (current.q ? ' ' : '') + text;
     }
   }
   flush();
