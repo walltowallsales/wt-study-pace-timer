@@ -11,6 +11,10 @@ const looksLikeQuestion = t => /\?/.test(t) || /^\(?[abc]\)?[.)]?\s+/i.test(t);
 const isReviewHeading = t => /how would you answer|review questions?/i.test(t);
 const isParagraphLabel = t => /^(?:\d{1,2})(?:\s*[-–]\s*\d{1,2})?$/.test(t);
 
+// WOL sometimes exposes the question, the 'Your answer' prompt, and the
+// paragraph body as one combined DOM block. Keep only the question-side text.
+const questionOnly = (s = '') => clean(String(s).split(/\byour answers?\b/i)[0]);
+
 function parseWol(html) {
   const $ = cheerio.load(html);
   $('script,style,noscript,header,footer,nav').remove();
@@ -74,7 +78,7 @@ function parseWol(html) {
     const leading = text.match(/^\s*(\d{1,2}(?:\s*[-–]\s*\d{1,2})?)\s*[.]?\s+(.*)$/s);
     if (leading && isParagraphLabel(leading[1])) {
       label = leading[1].replace(/\s+/g, '');
-      const remainder = clean(leading[2]);
+      const remainder = questionOnly(leading[2]);
       if (/\?/.test(remainder)) questionOnNumberLine = remainder;
     }
 
@@ -86,7 +90,7 @@ function parseWol(html) {
         label = numberCandidate.replace(/\s+/g, '');
         let remainder = text;
         const escaped = numberCandidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        remainder = clean(remainder.replace(new RegExp(`^\\s*${escaped}\\s*[.]?\\s*`), ''));
+        remainder = questionOnly(remainder.replace(new RegExp(`^\\s*${escaped}\\s*[.]?\\s*`), ''));
         if (/\?/.test(remainder)) questionOnNumberLine = remainder;
       }
     }
