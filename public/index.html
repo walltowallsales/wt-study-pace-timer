@@ -81,6 +81,60 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 }
 </style>
 
+
+<style>
+/* Conduct controls: stable location directly below timer */
+#conduct .conduct-control-dock{
+  margin-top:12px;
+  padding:12px;
+}
+#conduct .conduct-control-dock .primary-conduct-controls{
+  position:static !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  z-index:auto !important;
+  margin:0 !important;
+  padding:0 !important;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  background:transparent !important;
+  border:0 !important;
+  backdrop-filter:none !important;
+}
+#conduct .conduct-control-dock .secondary-conduct-controls{
+  margin-top:8px;
+}
+@media(max-width:700px){
+  #conduct .conduct-control-dock{
+    position:sticky;
+    top:0;
+    z-index:30;
+    margin-top:8px;
+    padding:8px;
+    border-radius:12px;
+    background:rgba(255,255,255,.97);
+    backdrop-filter:blur(10px);
+  }
+  #conduct .conduct-control-dock .primary-conduct-controls{
+    grid-template-columns:.8fr 1fr .8fr 1.25fr;
+    gap:6px;
+  }
+  #conduct .conduct-control-dock .primary-conduct-controls .btn{
+    min-height:48px;
+    padding:7px 4px;
+  }
+  #conduct .conduct-control-dock .secondary-conduct-controls{
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+  }
+  #conduct .current{
+    margin-top:10px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -158,6 +212,19 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
         <div id="paceBadge" class="pace good">On pace</div>
         <div class="progress"><div id="progressBar"></div></div>
       </div>
+      <div class="panel conduct-control-dock">
+        <div class="conduct-controls primary-conduct-controls">
+          <button class="btn secondary big" id="prevBtn">← Previous</button>
+          <button class="btn big" id="startPause">Start</button>
+          <button class="btn secondary big" id="holdBtn">Hold</button>
+          <button class="btn accent big" id="nextBtn">Next →</button>
+        </div>
+        <div class="conduct-controls secondary-conduct-controls">
+          <button class="btn secondary" id="plus30">+30 sec to this item</button>
+          <button class="btn secondary" id="minus30">−30 sec from this item</button>
+          
+        </div>
+      </div>
       <div class="panel current" style="margin-top:16px">
         <div class="section-label" id="currentSection"></div><div class="eyebrow" id="phaseLabel">Introduction</div>
         <h2 id="currentLabel">Opening comments</h2>
@@ -171,17 +238,6 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
         <div class="section-pace-box" id="sectionPaceBox">
           <div class="section-pace-head"><div class="section-pace-name" id="sectionPaceName">Section pacing</div><div class="pace good" id="sectionPaceBadge" style="margin-top:0">On pace</div></div>
           <div class="section-progress"><div id="sectionProgressBar"></div></div>
-        </div>
-        <div class="conduct-controls primary-conduct-controls">
-          <button class="btn secondary big" id="prevBtn">← Previous</button>
-          <button class="btn big" id="startPause">Start</button>
-          <button class="btn secondary big" id="holdBtn">Hold</button>
-          <button class="btn accent big" id="nextBtn">Next →</button>
-        </div>
-        <div class="conduct-controls secondary-conduct-controls">
-          <button class="btn secondary" id="plus30">+30 sec to this item</button>
-          <button class="btn secondary" id="minus30">−30 sec from this item</button>
-          
         </div>
       </div>
       <div class="landmarks" id="landmarks"></div>
