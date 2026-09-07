@@ -189,6 +189,11 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
   </section>
   <div class="footer">Standalone prototype · Data is saved in this browser using local storage.</div>
 </div>
+
+<div class="reset-session-safe-area" style="margin:48px auto 110px;max-width:420px;padding:18px;text-align:center;border-top:1px solid var(--border,#d9dde3);">
+  <div style="font-size:.78rem;opacity:.62;margin-bottom:10px;">SESSION CONTROLS</div>
+  <button class="btn danger" id="resetBtn">Reset session</button>
+</div>
 <script>
 const sampleUnits = [
  {label:'1–2',section:'Introduction',q:'(a) How does Jehovah care for the spiritual needs of his people today? (b) What will we consider regarding Christian meetings?',weight:'normal',read:true,picture:false,box:false,locked:false},
@@ -315,7 +320,7 @@ function parseOutline(){let lines=$('pasteInput').value.split(/\n+/).map(x=>x.tr
 load();syncTop();renderUnits();calculatePlan();renderConduct();
 ['titleInput','totalMin','introMin','reviewMin','conclusionMin'].forEach(id=>$(id).addEventListener('change',()=>{state.title=$('titleInput').value;state.totalMin=+$('totalMin').value;state.introMin=+$('introMin').value;state.reviewMin=+$('reviewMin').value;state.conclusionMin=+$('conclusionMin').value;save();updateMetrics();calculatePlan()}));
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('recalculate').onclick=calculatePlan;$('parsePaste').onclick=parseOutline;$('importUrl').onclick=importFromUrl;$('exportLesson').onclick=downloadLessonFile;$('shareLesson').onclick=shareLessonFile;$('importLessonFile').onclick=()=>$('lessonFileInput').click();$('lessonFileInput').onchange=e=>{const f=e.target.files&&e.target.files[0];openLessonFile(f);e.target.value=''};$('loadDemo').onclick=()=>{state={title:'Pay Attention to How You Listen',totalMin:60,introMin:1.5,reviewMin:6,conclusionMin:1.25,reviewQs:structuredClone(defaultReviewQs),units:structuredClone(sampleUnits)};save();syncTop();renderUnits();calculatePlan();alert('Sample lesson loaded.')};$('addUnit').onclick=()=>{state.units.push(normalizeUnit({label:String(state.units.length+1),q:'New discussion question'}));save();renderUnits();updateMetrics()};
-$('startPause').onclick=()=>{if(session.running){session.manualElapsed=currentElapsed();session.running=false;session.startTs=null}else{session.running=true;session.hold=false;session.startTs=Date.now()}renderConduct()};$('holdBtn').onclick=()=>{if(!session.running)return;if(!session.hold){session.manualElapsed=currentElapsed();session.hold=true}else{session.hold=false;session.startTs=Date.now()}renderConduct()};$('nextBtn').onclick=()=>{let elapsed=currentElapsed();if(session.index<plan.length-1){redistributeFrom(session.index,elapsed);session.index++;renderConduct()}else{session.running=false;session.manualElapsed=elapsed;alert(`Session complete: ${fmt(elapsed)}`);renderConduct()}};$('prevBtn').onclick=()=>{if(session.index>0){session.index--;renderConduct()}};$('plus30').onclick=()=>{let p=plan[session.index];p.sec+=30;for(let j=session.index;j<plan.length;j++)plan[j].target+=30;renderConduct()};$('minus30').onclick=()=>{let p=plan[session.index];let d=Math.min(30,Math.max(0,p.sec-30));p.sec-=d;for(let j=session.index;j<plan.length;j++)plan[j].target-=d;renderConduct()};$('resetBtn').onclick=()=>{if(confirm('Reset the live session clock?'))resetSession()};
+$('startPause').onclick=()=>{if(session.running){session.manualElapsed=currentElapsed();session.running=false;session.startTs=null}else{session.running=true;session.hold=false;session.startTs=Date.now()}renderConduct()};$('holdBtn').onclick=()=>{if(!session.running)return;if(!session.hold){session.manualElapsed=currentElapsed();session.hold=true}else{session.hold=false;session.startTs=Date.now()}renderConduct()};$('nextBtn').onclick=()=>{let elapsed=currentElapsed();if(session.index<plan.length-1){redistributeFrom(session.index,elapsed);session.index++;renderConduct()}else{session.running=false;session.manualElapsed=elapsed;alert(`Session complete: ${fmt(elapsed)}`);renderConduct()}};$('prevBtn').onclick=()=>{if(session.index>0){session.index--;renderConduct()}};$('plus30').onclick=()=>{let p=plan[session.index];p.sec+=30;for(let j=session.index;j<plan.length;j++)plan[j].target+=30;renderConduct()};$('minus30').onclick=()=>{let p=plan[session.index];let d=Math.min(30,Math.max(0,p.sec-30));p.sec-=d;for(let j=session.index;j<plan.length;j++)plan[j].target-=d;renderConduct()};const resetBtnEl=$('resetBtn');if(resetBtnEl)resetBtnEl.onclick=()=>{if(confirm('Reset the live session clock?'))resetSession()};
 function tickConductLive(){
   const view=$('conduct');
   if(!view || view.classList.contains('hidden') || !plan.length) return;
@@ -335,9 +340,6 @@ function tickConductLive(){
 setInterval(tickConductLive,250);
 </script>
 
-<div class="reset-session-safe-area" style="margin:48px auto 110px;max-width:420px;padding:18px;text-align:center;border-top:1px solid var(--border,#d9dde3);">
-  <div style="font-size:.78rem;opacity:.62;margin-bottom:10px;">SESSION CONTROLS</div>
-  <button class="btn danger" id="resetBtn">Reset session</button>
-</div>
+
 </body>
 </html>
