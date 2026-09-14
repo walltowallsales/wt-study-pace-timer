@@ -160,6 +160,28 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 }
 </style>
 
+
+<style>
+#plan .plan-done-check{
+  width:20px;height:20px;margin:0 9px 0 0;vertical-align:middle;accent-color:#b91c1c;cursor:pointer;flex:0 0 auto
+}
+#plan .plan-check-label{display:flex;align-items:center;cursor:pointer}
+#plan .plan-complete td{background:#fee2e2!important;color:#991b1b}
+#plan .plan-current td{background:#fef3c7!important;color:#78350f}
+#plan .plan-complete .chip{background:#fecaca!important;color:#7f1d1d!important}
+#plan .plan-current .chip{background:#fde68a!important;color:#78350f!important}
+@media(max-width:600px){
+  #plan .plan-complete,#plan .plan-current{border-radius:12px}
+  #plan .plan-complete td,#plan .plan-current td{background:transparent!important}
+  #plan .plan-complete{background:#fee2e2!important;border-color:#fca5a5!important}
+  #plan .plan-current{background:#fef3c7!important;border-color:#fcd34d!important}
+}
+@media print{
+  #plan .plan-complete td{background:#fee2e2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #plan .plan-current td{background:#fef3c7!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -312,7 +334,7 @@ async function openLessonFile(file){if(!file)return;try{const text=await file.te
 function load(){try{const x=JSON.parse(localStorage.getItem('studyPaceTimerState'));if(x&&x.units)state=x}catch(e){} if(!Array.isArray(state.reviewQs)||!state.reviewQs.length)state.reviewQs=structuredClone(defaultReviewQs)}
 function syncTop(){ $('titleInput').value=state.title;$('totalMin').value=state.totalMin;$('introMin').value=state.introMin;$('reviewMin').value=state.reviewMin;$('conclusionMin').value=state.conclusionMin; updateMetrics();}
 function makeUid(){return 'u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
-function normalizeUnit(u){return {uid:u.uid||makeUid(),label:u.label||'New',section:u.section||'',q:u.q||'',weight:u.weight||'normal',read:!!u.read,picture:!!u.picture,box:!!u.box,locked:!!u.locked,manualSec:u.manualSec??null}}
+function normalizeUnit(u){return {uid:u.uid||makeUid(),label:u.label||'New',section:u.section||'',q:u.q||'',weight:u.weight||'normal',read:!!u.read,picture:!!u.picture,box:!!u.box,locked:!!u.locked,manualSec:u.manualSec??null,done:!!u.done}}
 function countParts(q){let m=(q.match(/\([abc]\)/gi)||[]).length; return Math.max(1,m)}
 function overhead(u){return (u.read?45:0)+(u.picture?40:0)+(u.box?45:0)+Math.max(0,countParts(u.q)-1)*25}
 function updateMetrics(){let fixed=(+state.introMin + +state.reviewMin + +state.conclusionMin)*60; $('discussionPool').textContent=fmt(+state.totalMin*60-fixed);$('unitCount').textContent=state.units.length;$('scriptureCount').textContent=state.units.filter(x=>x.read).length;$('visualCount').textContent=state.units.filter(x=>x.picture||x.box).length}
@@ -363,7 +385,42 @@ function sectionInfoAt(idx){
  let scheduledStart=start?plan[start-1].target:0,scheduledFinish=plan[end].target;
  return {key,start,end,scheduledStart,scheduledFinish,duration:scheduledFinish-scheduledStart};
 }
-function renderPlan(){let body=$('planBody');body.innerHTML='';let lastSection=null;plan.forEach((p,idx)=>{if(p.type==='unit'&&p.section&&p.section!==lastSection){let info=sectionInfoAt(idx);let sr=document.createElement('tr');sr.className='plan-section';sr.innerHTML=`<td colspan="3">${esc(p.section)}</td><td class="num">Section target ${fmt(info.scheduledFinish)}</td>`;body.appendChild(sr);lastSection=p.section}let features=[];if(p.type==='unit'){if(p.read)features.push('Read');if(p.picture)features.push('Picture');if(p.box)features.push('Box');features.push(p.weight.replace('very','Very weighty'))}else features.push('Protected');let tr=document.createElement('tr');tr.innerHTML=`<td><b>${esc(p.label)}</b></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;body.appendChild(tr)});$('planTotal').textContent=fmt(state.totalMin*60);$('planIntro').textContent=fmt(state.introMin*60);$('planEnding').textContent=fmt((+state.reviewMin + +state.conclusionMin)*60);$('planDiscussion').textContent=fmt(state.totalMin*60-(+state.introMin + +state.reviewMin + +state.conclusionMin)*60)}
+function renderPlan(){
+ let body=$('planBody');body.innerHTML='';let lastSection=null;
+ let currentUnitIndex=state.units.findIndex(u=>!u.done);
+ plan.forEach((p,idx)=>{
+   if(p.type==='unit'&&p.section&&p.section!==lastSection){
+     let info=sectionInfoAt(idx),sr=document.createElement('tr');
+     sr.className='plan-section';
+     sr.innerHTML=`<td colspan="3">${esc(p.section)}</td><td class="num">Section target ${fmt(info.scheduledFinish)}</td>`;
+     body.appendChild(sr);lastSection=p.section
+   }
+   let features=[];
+   if(p.type==='unit'){
+     if(p.read)features.push('Read');
+     if(p.picture)features.push('Picture');
+     if(p.box)features.push('Box');
+     features.push(p.weight.replace('very','Very weighty'))
+   }else features.push('Protected');
+   let tr=document.createElement('tr');
+   if(p.type==='unit'){
+     let done=!!state.units[p.unitIndex]?.done;
+     tr.className=done?'plan-complete':(p.unitIndex===currentUnitIndex?'plan-current':'');
+     tr.innerHTML=`<td><label class="plan-check-label"><input type="checkbox" class="plan-done-check" data-unit-index="${p.unitIndex}" ${done?'checked':''}><b>${esc(p.label)}</b></label></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
+   }else{
+     tr.innerHTML=`<td><b>${esc(p.label)}</b></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
+   }
+   body.appendChild(tr)
+ });
+ body.querySelectorAll('.plan-done-check').forEach(cb=>cb.addEventListener('change',e=>{
+   let i=+e.currentTarget.dataset.unitIndex;
+   if(state.units[i]){state.units[i].done=e.currentTarget.checked;save();renderPlan()}
+ }));
+ $('planTotal').textContent=fmt(state.totalMin*60);
+ $('planIntro').textContent=fmt(state.introMin*60);
+ $('planEnding').textContent=fmt((+state.reviewMin + +state.conclusionMin)*60);
+ $('planDiscussion').textContent=fmt(state.totalMin*60-(+state.introMin + +state.reviewMin + +state.conclusionMin)*60)
+}
 function currentElapsed(){if(!session.running)return session.manualElapsed;if(session.hold)return session.manualElapsed;return session.manualElapsed+(Date.now()-session.startTs)/1000}
 function redistributeFrom(idx,elapsed){let current=plan[idx];let delta=elapsed-(idx?plan[idx-1].target:0); if(idx>=plan.length-1)return; // actual duration on current
  let targetDur=current.sec, overrun=delta-targetDur;if(Math.abs(overrun)<1)return;
