@@ -56,3 +56,21 @@ When you receive a new version of the app, upload the changed files to the same 
 ## Note about Render Free
 
 A free web service can spin down after being idle. The first visit after a period of inactivity may take longer while it wakes up.
+
+
+## PIN protection on Render
+
+In your Render service, open **Environment** and add:
+
+- `APP_PIN` — the PIN you want to use.
+- `PIN_REMEMBER_DAYS` — how many days a browser should remain signed in (for example `90`).
+
+Optional:
+- `AUTH_SECRET` — a long random secret for signing login cookies. If you omit it, the app derives a signing secret from `APP_PIN`.
+
+After changing an environment variable, choose **Save and Deploy**.
+
+Notes:
+- If `APP_PIN` is not set, PIN protection is disabled.
+- Changing `APP_PIN` invalidates existing remembered logins.
+- Clearing browser cookies, Private Browsing, or using a new browser/device will require the PIN again.

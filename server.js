@@ -1,9 +1,138 @@
 const express = require('express');
 const cheerio = require('cheerio');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 app.use(express.json({ limit: '128kb' }));
+app.use(express.urlencoded({ extended: false }));
+
+
+// ---------------- PIN protection ----------------
+// Set these in Render > Environment:
+//   APP_PIN = your PIN
+//   PIN_REMEMBER_DAYS = number of days to remember a successful browser (default 90)
+//
+// If APP_PIN is blank/not set, PIN protection is disabled.
+const APP_PIN = String(process.env.APP_PIN || '');
+const parsedRememberDays = Number.parseFloat(process.env.PIN_REMEMBER_DAYS || '90');
+const PIN_REMEMBER_DAYS = Number.isFinite(parsedRememberDays) && parsedRememberDays > 0
+  ? Math.min(parsedRememberDays, 3650)
+  : 90;
+const AUTH_COOKIE = 'study_pace_auth';
+const AUTH_SECRET = String(process.env.AUTH_SECRET || `study-pace:${APP_PIN}:v1`);
+
+function parseCookies(req) {
+  const raw = req.headers.cookie || '';
+  const out = {};
+  raw.split(';').forEach(part => {
+    const i = part.indexOf('=');
+    if (i < 0) return;
+    const k = part.slice(0, i).trim();
+    const v = part.slice(i + 1).trim();
+    if (k) out[k] = decodeURIComponent(v);
+  });
+  return out;
+}
+
+function signAuth(expMs) {
+  const payload = String(expMs);
+  const sig = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('hex');
+  return `${payload}.${sig}`;
+}
+
+function authCookieValid(req) {
+  if (!APP_PIN) return true;
+  const token = parseCookies(req)[AUTH_COOKIE];
+  if (!token) return false;
+  const dot = token.indexOf('.');
+  if (dot < 1) return false;
+  const expText = token.slice(0, dot);
+  const suppliedSig = token.slice(dot + 1);
+  const exp = Number(expText);
+  if (!Number.isFinite(exp) || Date.now() > exp) return false;
+  const expectedSig = crypto.createHmac('sha256', AUTH_SECRET).update(expText).digest('hex');
+  try {
+    const a = Buffer.from(suppliedSig, 'hex');
+    const b = Buffer.from(expectedSig, 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
+function safeNext(value) {
+  const v = String(value || '/');
+  return v.startsWith('/') && !v.startsWith('//') ? v : '/';
+}
+
+function loginPage(message = '', next = '/') {
+  const escapedMessage = String(message).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const escapedNext = String(next).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return `<!doctype html>
+<html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Study Pace Timer</title>
+<style>
+body{margin:0;background:#f5f7fb;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#182235}
+.wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{width:min(420px,100%);background:#fff;border:1px solid #dfe5ee;border-radius:18px;padding:26px;box-shadow:0 12px 34px rgba(15,23,42,.08)}
+h1{font-size:24px;margin:0 0 6px}.sub{color:#64748b;margin:0 0 20px}
+input{box-sizing:border-box;width:100%;font-size:22px;letter-spacing:.12em;padding:13px 14px;border:1px solid #cbd5e1;border-radius:12px;text-align:center}
+button{width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:#2563eb;color:#fff;font-size:17px;font-weight:800}
+.err{background:#fee2e2;color:#991b1b;padding:10px 12px;border-radius:10px;margin-bottom:14px}
+.note{font-size:12px;color:#64748b;margin-top:14px;text-align:center}
+</style></head>
+<body><div class="wrap"><form class="card" method="post" action="/login">
+<h1>Study Pace Timer</h1><p class="sub">Enter the PIN to continue.</p>
+${escapedMessage ? `<div class="err">${escapedMessage}</div>` : ''}
+<input type="password" inputmode="numeric" autocomplete="one-time-code" name="pin" placeholder="PIN" autofocus required>
+<input type="hidden" name="next" value="${escapedNext}">
+<button type="submit">Unlock</button>
+<div class="note">This browser will stay signed in for ${PIN_REMEMBER_DAYS} day${PIN_REMEMBER_DAYS === 1 ? '' : 's'}.</div>
+</form></div></body></html>`;
+}
+
+app.get('/login', (req, res) => {
+  if (!APP_PIN || authCookieValid(req)) return res.redirect(safeNext(req.query.next));
+  res.type('html').send(loginPage('', safeNext(req.query.next)));
+});
+
+app.post('/login', (req, res) => {
+  if (!APP_PIN) return res.redirect('/');
+  const supplied = String(req.body.pin || '');
+  const a = Buffer.from(supplied);
+  const b = Buffer.from(APP_PIN);
+  const correct = a.length === b.length && crypto.timingSafeEqual(a, b);
+  const next = safeNext(req.body.next);
+  if (!correct) return res.status(401).type('html').send(loginPage('Incorrect PIN. Try again.', next));
+
+  const maxAgeMs = Math.round(PIN_REMEMBER_DAYS * 24 * 60 * 60 * 1000);
+  const exp = Date.now() + maxAgeMs;
+  res.cookie(AUTH_COOKIE, signAuth(exp), {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: maxAgeMs,
+    path: '/'
+  });
+  res.redirect(next);
+});
+
+app.get('/logout', (_req, res) => {
+  res.clearCookie(AUTH_COOKIE, { path: '/' });
+  res.redirect('/login');
+});
+
+function requirePin(req, res, next) {
+  if (!APP_PIN || authCookieValid(req)) return next();
+  if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'PIN required' });
+  const nextUrl = encodeURIComponent(req.originalUrl || '/');
+  res.redirect(`/login?next=${nextUrl}`);
+}
+
+// Everything below this point, including the importer and static app files,
+// is protected by the PIN when APP_PIN is set.
+app.use(requirePin);
 app.use(express.static(path.join(__dirname, 'public')));
 
 const clean = (s = '') => s.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
