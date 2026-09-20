@@ -74,3 +74,14 @@ Notes:
 - If `APP_PIN` is not set, PIN protection is disabled.
 - Changing `APP_PIN` invalidates existing remembered logins.
 - Clearing browser cookies, Private Browsing, or using a new browser/device will require the PIN again.
+
+
+## Browser-local lesson recovery (V2.4)
+
+The app automatically stores the current lesson and settings in the browser's localStorage.
+This includes the imported article data, paragraph settings/order, timing settings, and Timing Plan completion state.
+It saves on normal edits, every 15 seconds while open, and when the page is hidden/closed.
+A previous-state backup is also kept locally for basic recovery if the primary saved state cannot be read.
+
+This storage is per browser/device. Different users opening the same Render app do not share these saved lessons.
+Clearing site/browser data or using Private Browsing can remove/prevent persistent local data, so the lesson export file remains useful as a portable backup.
