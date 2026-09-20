@@ -77,6 +77,16 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 @media print{
  #plan .plan-table th:last-child,#plan .plan-table td:last-child{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* V2.10 Timing Plan emphasis */
+#plan .plan-section td{background:#1e293b!important;color:#fff!important;font-size:15px!important;font-weight:950!important;letter-spacing:.3px!important;padding:11px 12px!important;border-top:3px solid #0f172a!important;border-bottom:3px solid #0f172a!important}
+#plan .plan-complete td{background:#991b1b!important;color:#fff!important;border-color:#7f1d1d!important}
+#plan .plan-complete td:last-child{background:#991b1b!important;color:#fff!important;border-left-color:#7f1d1d!important}
+#plan .plan-complete .chip{background:#7f1d1d!important;color:#fff!important;border-color:#fecaca!important}
+#plan .plan-complete input[type="checkbox"]{accent-color:#450a0a}
+@media print{
+ #plan .plan-section td,#plan .plan-complete td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 </style>
 
 <style>
@@ -481,13 +491,13 @@ function renderPlan(){
    }
    let features=[];
    if(p.type==='unit'){
-     if(p.read)features.push('Read');if(p.picture)features.push('Picture');if(p.box)features.push('Box');
+     if(p.box)features.push('Box');
      features.push(p.weight.replace('very','Very weighty'))
    }else features.push('Protected');
    let tr=document.createElement('tr');
    if(p.type==='unit'||p.type==='review'){
      let done=isDone(p),current=sameItem(p,currentItem),next=sameItem(p,nextItem);
-     let status=done?'':current?'CURRENT':next?'NEXT':'';
+     let status=done?'':current?'CURRENT':next?'NEXT UP':'';
      tr.className=done?'plan-complete':(current?'plan-current':(next?'plan-next':''));
      let dataAttr=p.type==='unit'?`data-unit-index="${p.unitIndex}"`:`data-review-index="${p.reviewIndex}"`;
      tr.innerHTML=`<td><label class="plan-check-label"><input type="checkbox" class="plan-done-check" data-plan-type="${p.type}" ${dataAttr} ${done?'checked':''}><span class="plan-label-wrap"><b>${esc(p.label)}</b>${status?`<span class="plan-status">${status}</span>`:''}${p.type==='unit'&&p.readBefore?`<span class="plan-read-alert">⚠ READ SCRIPTURE BEFORE PARAGRAPH</span>`:''}${p.type==='unit'&&p.readAfter?`<span class="plan-read-alert after">⚠ READ SCRIPTURE AFTER PARAGRAPH</span>`:''}</span></label></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
