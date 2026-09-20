@@ -257,7 +257,7 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 
   <section id="plan" class="view hidden">
     <div class="panel">
-      <div class="row" style="justify-content:space-between"><div><h2 class="section-title" style="margin:0">Timing plan</h2><p class="hint" style="margin:4px 0 0">Fixed time is protected first; remaining time is distributed by weight and complexity.</p></div><div class="plan-actions"><button class="btn secondary" id="printPlan">Print</button><button class="btn accent" id="recalculate">Recalculate</button></div></div>
+      <div class="row" style="justify-content:space-between"><div><h2 class="section-title" style="margin:0">Timing plan</h2><p class="hint" style="margin:4px 0 0">Fixed time is protected first; remaining time is distributed by weight and complexity.</p></div><div class="plan-actions"><button class="btn secondary" id="clearPlanChecks">Clear all checkmarks</button><button class="btn secondary" id="printPlan">Print</button><button class="btn accent" id="recalculate">Recalculate</button></div></div>
       <div class="metricbar">
         <div class="metric"><div class="k">Total</div><div class="v" id="planTotal">—</div></div>
         <div class="metric"><div class="k">Intro</div><div class="v" id="planIntro">—</div></div>
@@ -355,7 +355,7 @@ function lessonExportObject(){return {format:'study-pace-timer',version:1,export
 function makeLessonFile(){const data=JSON.stringify(lessonExportObject(),null,2);return new File([data],safeFilename(state.title)+'.study-pacer.json',{type:'application/json'})}
 function downloadLessonFile(){const file=makeLessonFile(),url=URL.createObjectURL(file),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('shareStatus').textContent='Lesson file saved. Send this file to the other device, then use Open lesson file there.'}
 async function shareLessonFile(){const file=makeLessonFile();try{if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){await navigator.share({title:state.title,text:'Prepared Study Pace Timer lesson',files:[file]});$('shareStatus').textContent='Share sheet opened.'}else{downloadLessonFile();$('shareStatus').textContent='Direct file sharing is not supported by this browser, so the lesson file was saved instead.'}}catch(e){if(e&&e.name==='AbortError')return;console.error(e);downloadLessonFile()}}
-function applyImportedLesson(obj){let incoming=obj&&obj.format==='study-pace-timer'?obj.lesson:obj;if(!incoming||!Array.isArray(incoming.units))throw new Error('This is not a valid Study Pace Timer lesson file.');state={title:String(incoming.title||'Imported lesson'),totalMin:+incoming.totalMin||60,introMin:Number.isFinite(+incoming.introMin)?+incoming.introMin:1.5,reviewMin:Number.isFinite(+incoming.reviewMin)?+incoming.reviewMin:6,conclusionMin:Number.isFinite(+incoming.conclusionMin)?+incoming.conclusionMin:1.25,reviewQs:Array.isArray(incoming.reviewQs)&&incoming.reviewQs.length?incoming.reviewQs.slice(0,3):structuredClone(defaultReviewQs),units:incoming.units.map(normalizeUnit)};save();syncTop();renderUnits();calculatePlan();resetSession();$('shareStatus').textContent=`Opened lesson file: ${state.title}`}
+function applyImportedLesson(obj){let incoming=obj&&obj.format==='study-pace-timer'?obj.lesson:obj;if(!incoming||!Array.isArray(incoming.units))throw new Error('This is not a valid Study Pace Timer lesson file.');state={title:String(incoming.title||'Imported lesson'),totalMin:+incoming.totalMin||60,introMin:Number.isFinite(+incoming.introMin)?+incoming.introMin:1.5,reviewMin:Number.isFinite(+incoming.reviewMin)?+incoming.reviewMin:6,conclusionMin:Number.isFinite(+incoming.conclusionMin)?+incoming.conclusionMin:1.25,reviewQs:Array.isArray(incoming.reviewQs)&&incoming.reviewQs.length?incoming.reviewQs.slice(0,3):structuredClone(defaultReviewQs),reviewDone:Array.isArray(incoming.reviewDone)?incoming.reviewDone.slice(0,3).map(Boolean):[],units:incoming.units.map(normalizeUnit)};save();syncTop();renderUnits();calculatePlan();resetSession();$('shareStatus').textContent=`Opened lesson file: ${state.title}`}
 function readLessonFileText(file){
   if(file && typeof file.text==='function'){
     return file.text().catch(()=>new Promise((resolve,reject)=>{
@@ -394,6 +394,9 @@ function load(){
     }catch(_){}
   }
   if(!Array.isArray(state.reviewQs)||!state.reviewQs.length)state.reviewQs=structuredClone(defaultReviewQs);
+  if(!Array.isArray(state.reviewDone))state.reviewDone=state.reviewQs.map(()=>false);
+  while(state.reviewDone.length<state.reviewQs.length)state.reviewDone.push(false);
+  state.reviewDone=state.reviewDone.slice(0,state.reviewQs.length).map(Boolean);
   if(Array.isArray(state.units))state.units=state.units.map(normalizeUnit);
 }
 function syncTop(){ $('titleInput').value=state.title;$('totalMin').value=state.totalMin;$('introMin').value=state.introMin;$('reviewMin').value=state.reviewMin;$('conclusionMin').value=state.conclusionMin; updateMetrics();}
@@ -436,7 +439,7 @@ function calculatePlan(){state.units=state.units.map(normalizeUnit);let total=+s
  let lockedTotal=0, flex=[]; state.units.forEach((u,i)=>{if(u.locked&&u.manualSec!=null)lockedTotal+=u.manualSec;else flex.push(i)});let flexAvail=Math.max(0,available-lockedTotal);let totalOver=flex.reduce((a,i)=>a+overhead(state.units[i]),0);let basePool=Math.max(0,flexAvail-totalOver);let pts=flex.reduce((a,i)=>a+weightMap[state.units[i].weight],0)||1;
  plan=[];let cumulative=intro; plan.push({type:'intro',label:'Introduction',q:'Introduce the lesson and focus.',sec:intro,target:cumulative,plannedTarget:cumulative,locked:true});
  state.units.forEach((u,i)=>{let sec=u.locked&&u.manualSec!=null?u.manualSec:overhead(u)+basePool*(weightMap[u.weight]/pts);sec=Math.max(55,sec);cumulative+=sec;plan.push({type:'unit',unitIndex:i,label:`Paragraph ${u.label}`,section:u.section,q:u.q,sec,target:cumulative,plannedTarget:cumulative,locked:u.locked,read:u.read,picture:u.picture,box:u.box,weight:u.weight});});
- let reviewQs=state.reviewQs||defaultReviewQs;let perReview=review/reviewQs.length;reviewQs.forEach((q,j)=>{cumulative+=perReview;plan.push({type:'review',label:`Review ${j+1}`,q,sec:perReview,target:cumulative,plannedTarget:cumulative,locked:true})});cumulative+=concl;plan.push({type:'conclusion',label:'Conclusion',q:'Conclude the study and transition smoothly.',sec:concl,target:cumulative,plannedTarget:cumulative,locked:true});
+ let reviewQs=state.reviewQs||defaultReviewQs;let perReview=review/reviewQs.length;reviewQs.forEach((q,j)=>{cumulative+=perReview;plan.push({type:'review',reviewIndex:j,label:`Review ${j+1}`,q,sec:perReview,target:cumulative,plannedTarget:cumulative,locked:true})});cumulative+=concl;plan.push({type:'conclusion',label:'Conclusion',q:'Conclude the study and transition smoothly.',sec:concl,target:cumulative,plannedTarget:cumulative,locked:true});
  // normalize drift to total by adjusting unlocked units
  let drift=total-cumulative;if(Math.abs(drift)>.5){let ids=plan.map((p,i)=>({p,i})).filter(x=>x.p.type==='unit'&&!x.p.locked);if(ids.length){let each=drift/ids.length;ids.forEach(x=>x.p.sec=Math.max(45,x.p.sec+each));let c=0;plan.forEach(p=>{c+=p.sec;p.target=c;p.plannedTarget=c})}}
  renderPlan();return plan}
@@ -451,8 +454,13 @@ function sectionInfoAt(idx){
 }
 function renderPlan(){
  let body=$('planBody');body.innerHTML='';let lastSection=null;
- let currentUnitIndex=state.units.findIndex(u=>!u.done);
- let nextUnitIndex=currentUnitIndex>=0?state.units.findIndex((u,i)=>i>currentUnitIndex&&!u.done):-1;
+ if(!Array.isArray(state.reviewDone))state.reviewDone=(state.reviewQs||defaultReviewQs).map(()=>false);
+ const trackable=plan.filter(p=>p.type==='unit'||p.type==='review');
+ const isDone=p=>p.type==='unit'?!!state.units[p.unitIndex]?.done:!!state.reviewDone[p.reviewIndex];
+ const firstOpen=trackable.findIndex(p=>!isDone(p));
+ const currentItem=firstOpen>=0?trackable[firstOpen]:null;
+ const nextItem=firstOpen>=0?trackable.slice(firstOpen+1).find(p=>!isDone(p)):null;
+ const sameItem=(a,b)=>a&&b&&a.type===b.type&&(a.type==='unit'?a.unitIndex===b.unitIndex:a.reviewIndex===b.reviewIndex);
  plan.forEach((p,idx)=>{
    if(p.type==='unit'&&p.section&&p.section!==lastSection){
      let info=sectionInfoAt(idx),sr=document.createElement('tr');
@@ -466,19 +474,25 @@ function renderPlan(){
      features.push(p.weight.replace('very','Very weighty'))
    }else features.push('Protected');
    let tr=document.createElement('tr');
-   if(p.type==='unit'){
-     let done=!!state.units[p.unitIndex]?.done;
-     let status=done?'':p.unitIndex===currentUnitIndex?'CURRENT':p.unitIndex===nextUnitIndex?'NEXT':'';
-     tr.className=done?'plan-complete':(p.unitIndex===currentUnitIndex?'plan-current':(p.unitIndex===nextUnitIndex?'plan-next':''));
-     tr.innerHTML=`<td><label class="plan-check-label"><input type="checkbox" class="plan-done-check" data-unit-index="${p.unitIndex}" ${done?'checked':''}><span class="plan-label-wrap"><b>${esc(p.label)}</b>${status?`<span class="plan-status">${status}</span>`:''}</span></label></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
+   if(p.type==='unit'||p.type==='review'){
+     let done=isDone(p),current=sameItem(p,currentItem),next=sameItem(p,nextItem);
+     let status=done?'':current?'CURRENT':next?'NEXT':'';
+     tr.className=done?'plan-complete':(current?'plan-current':(next?'plan-next':''));
+     let dataAttr=p.type==='unit'?`data-unit-index="${p.unitIndex}"`:`data-review-index="${p.reviewIndex}"`;
+     tr.innerHTML=`<td><label class="plan-check-label"><input type="checkbox" class="plan-done-check" data-plan-type="${p.type}" ${dataAttr} ${done?'checked':''}><span class="plan-label-wrap"><b>${esc(p.label)}</b>${status?`<span class="plan-status">${status}</span>`:''}</span></label></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
    }else{
      tr.innerHTML=`<td><b>${esc(p.label)}</b></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
    }
    body.appendChild(tr)
  });
  body.querySelectorAll('.plan-done-check').forEach(cb=>cb.addEventListener('change',e=>{
-   let i=+e.currentTarget.dataset.unitIndex;
-   if(state.units[i]){state.units[i].done=e.currentTarget.checked;save();renderPlan()}
+   const el=e.currentTarget;
+   if(el.dataset.planType==='unit'){
+     let i=+el.dataset.unitIndex;if(state.units[i])state.units[i].done=el.checked;
+   }else if(el.dataset.planType==='review'){
+     let i=+el.dataset.reviewIndex;if(i>=0)state.reviewDone[i]=el.checked;
+   }
+   save();renderPlan();
  }));
  $('planTotal').textContent=fmt(state.totalMin*60);$('planIntro').textContent=fmt(state.introMin*60);
  $('planEnding').textContent=fmt((+state.reviewMin + +state.conclusionMin)*60);
@@ -526,8 +540,9 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 setInterval(save,15000);
 ['titleInput','totalMin','introMin','reviewMin','conclusionMin'].forEach(id=>$(id).addEventListener('change',()=>{state.title=$('titleInput').value;state.totalMin=+$('totalMin').value;state.introMin=+$('introMin').value;state.reviewMin=+$('reviewMin').value;state.conclusionMin=+$('conclusionMin').value;save();updateMetrics();calculatePlan()}));
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchView(b.dataset.view));$('recalculate').onclick=calculatePlan;$('parsePaste').onclick=parseOutline;$('importUrl').onclick=importFromUrl;$('exportLesson').onclick=downloadLessonFile;$('shareLesson').onclick=shareLessonFile;$('importLessonFile').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('lessonFileInput').click()}});
-$('lessonFileInput').addEventListener('change',async e=>{const input=e.currentTarget;const f=input.files&&input.files[0];if(f)await openLessonFile(f);input.value=''});$('loadDemo').onclick=()=>{state={title:'Pay Attention to How You Listen',totalMin:60,introMin:1.5,reviewMin:6,conclusionMin:1.25,reviewQs:structuredClone(defaultReviewQs),units:structuredClone(sampleUnits)};save();syncTop();renderUnits();calculatePlan();alert('Sample lesson loaded.')};$('addUnit').onclick=()=>{state.units.push(normalizeUnit({label:String(state.units.length+1),q:'New discussion question'}));save();renderUnits();updateMetrics()};
-$('startPause').onclick=()=>{if(session.running){session.manualElapsed=currentElapsed();session.running=false;session.startTs=null}else{session.running=true;session.hold=false;session.startTs=Date.now()}renderConduct()};$('holdBtn').onclick=()=>{if(!session.running)return;if(!session.hold){session.manualElapsed=currentElapsed();session.hold=true}else{session.hold=false;session.startTs=Date.now()}renderConduct()};$('nextBtn').onclick=()=>{let elapsed=currentElapsed();if(session.index<plan.length-1){redistributeFrom(session.index,elapsed);session.index++;renderConduct()}else{session.running=false;session.manualElapsed=elapsed;alert(`Session complete: ${fmt(elapsed)}`);renderConduct()}};$('prevBtn').onclick=()=>{if(session.index>0){session.index--;renderConduct()}};$('plus30').onclick=()=>{let p=plan[session.index];p.sec+=30;for(let j=session.index;j<plan.length;j++)plan[j].target+=30;renderConduct()};$('minus30').onclick=()=>{let p=plan[session.index];let d=Math.min(30,Math.max(0,p.sec-30));p.sec-=d;for(let j=session.index;j<plan.length;j++)plan[j].target-=d;renderConduct()};const printPlanBtn=$('printPlan');if(printPlanBtn)printPlanBtn.onclick=()=>window.print();
+$('lessonFileInput').addEventListener('change',async e=>{const input=e.currentTarget;const f=input.files&&input.files[0];if(f)await openLessonFile(f);input.value=''});$('loadDemo').onclick=()=>{state={title:'Pay Attention to How You Listen',totalMin:60,introMin:1.5,reviewMin:6,conclusionMin:1.25,reviewQs:structuredClone(defaultReviewQs),reviewDone:defaultReviewQs.map(()=>false),units:structuredClone(sampleUnits)};save();syncTop();renderUnits();calculatePlan();alert('Sample lesson loaded.')};$('addUnit').onclick=()=>{state.units.push(normalizeUnit({label:String(state.units.length+1),q:'New discussion question'}));save();renderUnits();updateMetrics()};
+$('startPause').onclick=()=>{if(session.running){session.manualElapsed=currentElapsed();session.running=false;session.startTs=null}else{session.running=true;session.hold=false;session.startTs=Date.now()}renderConduct()};$('holdBtn').onclick=()=>{if(!session.running)return;if(!session.hold){session.manualElapsed=currentElapsed();session.hold=true}else{session.hold=false;session.startTs=Date.now()}renderConduct()};$('nextBtn').onclick=()=>{let elapsed=currentElapsed();if(session.index<plan.length-1){redistributeFrom(session.index,elapsed);session.index++;renderConduct()}else{session.running=false;session.manualElapsed=elapsed;alert(`Session complete: ${fmt(elapsed)}`);renderConduct()}};$('prevBtn').onclick=()=>{if(session.index>0){session.index--;renderConduct()}};$('plus30').onclick=()=>{let p=plan[session.index];p.sec+=30;for(let j=session.index;j<plan.length;j++)plan[j].target+=30;renderConduct()};$('minus30').onclick=()=>{let p=plan[session.index];let d=Math.min(30,Math.max(0,p.sec-30));p.sec-=d;for(let j=session.index;j<plan.length;j++)plan[j].target-=d;renderConduct()};const clearPlanChecksBtn=$('clearPlanChecks');if(clearPlanChecksBtn)clearPlanChecksBtn.onclick=()=>{state.units.forEach(u=>u.done=false);state.reviewDone=(state.reviewQs||defaultReviewQs).map(()=>false);save();renderPlan()};
+const printPlanBtn=$('printPlan');if(printPlanBtn)printPlanBtn.onclick=()=>window.print();
 const resetBtnEl=$('resetBtn');if(resetBtnEl)resetBtnEl.onclick=()=>{if(confirm('Reset the live session clock?'))resetSession()};
 function tickConductLive(){
   const view=$('conduct');
