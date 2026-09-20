@@ -182,6 +182,23 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 }
 </style>
 
+
+<style>
+#plan .plan-label-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+#plan .plan-status{display:inline-block;font-size:11px;line-height:1;font-weight:900;letter-spacing:.06em;padding:5px 7px;border-radius:999px;background:#fff;border:1px solid currentColor}
+#plan .plan-complete .plan-status{color:#991b1b}
+#plan .plan-current .plan-status{color:#92400e}
+#plan .plan-next td{background:#f3f4f6!important}
+#plan .plan-next .plan-status{color:#166534;background:#dcfce7;border-color:#16a34a}
+@media(max-width:600px){
+ #plan .plan-next{background:#f3f4f6!important;border-color:#d1d5db!important}
+ #plan .plan-next td{background:transparent!important}
+}
+@media print{
+ #plan .plan-next td{background:#f3f4f6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -388,6 +405,7 @@ function sectionInfoAt(idx){
 function renderPlan(){
  let body=$('planBody');body.innerHTML='';let lastSection=null;
  let currentUnitIndex=state.units.findIndex(u=>!u.done);
+ let nextUnitIndex=currentUnitIndex>=0?state.units.findIndex((u,i)=>i>currentUnitIndex&&!u.done):-1;
  plan.forEach((p,idx)=>{
    if(p.type==='unit'&&p.section&&p.section!==lastSection){
      let info=sectionInfoAt(idx),sr=document.createElement('tr');
@@ -397,16 +415,15 @@ function renderPlan(){
    }
    let features=[];
    if(p.type==='unit'){
-     if(p.read)features.push('Read');
-     if(p.picture)features.push('Picture');
-     if(p.box)features.push('Box');
+     if(p.read)features.push('Read');if(p.picture)features.push('Picture');if(p.box)features.push('Box');
      features.push(p.weight.replace('very','Very weighty'))
    }else features.push('Protected');
    let tr=document.createElement('tr');
    if(p.type==='unit'){
      let done=!!state.units[p.unitIndex]?.done;
-     tr.className=done?'plan-complete':(p.unitIndex===currentUnitIndex?'plan-current':'');
-     tr.innerHTML=`<td><label class="plan-check-label"><input type="checkbox" class="plan-done-check" data-unit-index="${p.unitIndex}" ${done?'checked':''}><b>${esc(p.label)}</b></label></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
+     let status=done?'':p.unitIndex===currentUnitIndex?'CURRENT':p.unitIndex===nextUnitIndex?'NEXT':'';
+     tr.className=done?'plan-complete':(p.unitIndex===currentUnitIndex?'plan-current':(p.unitIndex===nextUnitIndex?'plan-next':''));
+     tr.innerHTML=`<td><label class="plan-check-label"><input type="checkbox" class="plan-done-check" data-unit-index="${p.unitIndex}" ${done?'checked':''}><span class="plan-label-wrap"><b>${esc(p.label)}</b>${status?`<span class="plan-status">${status}</span>`:''}</span></label></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
    }else{
      tr.innerHTML=`<td><b>${esc(p.label)}</b></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
    }
@@ -416,8 +433,7 @@ function renderPlan(){
    let i=+e.currentTarget.dataset.unitIndex;
    if(state.units[i]){state.units[i].done=e.currentTarget.checked;save();renderPlan()}
  }));
- $('planTotal').textContent=fmt(state.totalMin*60);
- $('planIntro').textContent=fmt(state.introMin*60);
+ $('planTotal').textContent=fmt(state.totalMin*60);$('planIntro').textContent=fmt(state.introMin*60);
  $('planEnding').textContent=fmt((+state.reviewMin + +state.conclusionMin)*60);
  $('planDiscussion').textContent=fmt(state.totalMin*60-(+state.introMin + +state.reviewMin + +state.conclusionMin)*60)
 }
