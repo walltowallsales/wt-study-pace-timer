@@ -87,6 +87,12 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 @media print{
  #plan .plan-section td,#plan .plan-complete td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+#plan .plan-symbol{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;margin-right:5px;border:2px solid #334155;border-radius:5px;background:#fff;color:#0f172a;font-size:14px;font-weight:950;line-height:1;vertical-align:middle}
+#plan .plan-complete .plan-symbol{background:#fff!important;color:#7f1d1d!important;border-color:#fff!important}
+
+#plan .extras-label{font-weight:900;color:#334155;margin-right:4px}
+#plan .plan-complete .extras-label{color:#fff!important}
 </style>
 
 <style>
@@ -445,7 +451,7 @@ function enableDragReorder(el){
  });
 }
 function renderUnits(){const el=$('lessonList');el.innerHTML='';let lastSection=null;state.units.forEach((u,i)=>{u=normalizeUnit(u);state.units[i]=u;if(u.section&&u.section!==lastSection){const h=document.createElement('div');h.className='section-divider';h.textContent=u.section;el.appendChild(h);lastSection=u.section}const d=document.createElement('div');d.className='card';d.dataset.uid=u.uid;d.innerHTML=`<div class="card-head"><div style="display:flex;gap:10px;align-items:flex-start;flex:1"><button class="drag-handle" type="button" title="Drag to reorder" aria-label="Drag paragraph ${esc(u.label)} to reorder">☰</button><div><div class="card-title">Paragraph ${esc(u.label)}</div><div class="q">${esc(u.q)}</div><div class="chips">${u.read?'<span class="chip green">Read scripture</span>':''}${u.readBefore?'<span class="chip" style="background:#fee2e2;color:#7f1d1d;border:1px solid #991b1b">READ BEFORE</span>':''}${u.readAfter?'<span class="chip" style="background:#ffedd5;color:#7c2d12;border:1px solid #9a3412">READ AFTER</span>':''}${u.picture?'<span class="chip gold">Picture</span>':''}${u.box?'<span class="chip gold">Box</span>':''}<span class="chip gray">${countParts(u.q)} question${countParts(u.q)>1?' parts':''}</span>${u.locked?'<span class="chip">Locked</span>':''}</div></div></div><div class="reorder-tools"><button class="move-btn" data-up="${i}" title="Move up">↑</button><button class="move-btn" data-down="${i}" title="Move down">↓</button><button class="btn danger" data-remove="${i}">Remove</button></div></div>
-        <div class="card-controls"><div class="field"><label>Weight</label><select class="smallselect" data-weight="${i}"><option value="light">Light</option><option value="normal">Normal</option><option value="weighty">Weighty</option><option value="very">Very Weighty</option></select></div><label class="switch"><input type="checkbox" data-read="${i}" ${u.read?'checked':''}> Read</label><label class="switch"><input type="checkbox" data-read-before="${i}" ${u.readBefore?'checked':''}> Read BEFORE</label><label class="switch"><input type="checkbox" data-read-after="${i}" ${u.readAfter?'checked':''}> Read AFTER</label><label class="switch"><input type="checkbox" data-picture="${i}" ${u.picture?'checked':''}> Picture</label><label class="switch"><input type="checkbox" data-box="${i}" ${u.box?'checked':''}> Box</label><label class="switch"><input type="checkbox" data-lock="${i}" ${u.locked?'checked':''}> Lock</label><button class="btn secondary" data-edit="${i}">Edit</button></div><button class="insert-below-btn" type="button" data-insert-below="${i}" title="Add a unit below this one" aria-label="Add unit below paragraph ${esc(u.label)}">+</button>`;el.appendChild(d);d.querySelector(`[data-weight="${i}"]`).value=u.weight});
+        <div class="card-controls"><div class="field"><label>Weight</label><select class="smallselect" data-weight="${i}"><option value="light">Light</option><option value="normal">Normal</option><option value="weighty">Weighty</option><option value="very">Very Weighty</option></select></div><label class="switch"><input type="checkbox" data-read="${i}" ${u.read?'checked':''}> Read Scripture</label><label class="switch"><input type="checkbox" data-read-before="${i}" ${u.readBefore?'checked':''}> Read BEFORE</label><label class="switch"><input type="checkbox" data-read-after="${i}" ${u.readAfter?'checked':''}> Read AFTER</label><label class="switch"><input type="checkbox" data-picture="${i}" ${u.picture?'checked':''}> Picture</label><label class="switch"><input type="checkbox" data-box="${i}" ${u.box?'checked':''}> Box</label><label class="switch"><input type="checkbox" data-lock="${i}" ${u.locked?'checked':''}> Lock</label><button class="btn secondary" data-edit="${i}">Edit</button></div><button class="insert-below-btn" type="button" data-insert-below="${i}" title="Add a unit below this one" aria-label="Add unit below paragraph ${esc(u.label)}">+</button>`;el.appendChild(d);d.querySelector(`[data-weight="${i}"]`).value=u.weight});
  el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{state.units.splice(+b.dataset.remove,1);save();renderUnits();updateMetrics();calculatePlan()});
  el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveUnit(+b.dataset.up,+b.dataset.up-1));
  el.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveUnit(+b.dataset.down,+b.dataset.down+1));
@@ -491,8 +497,9 @@ function renderPlan(){
    }
    let features=[];
    if(p.type==='unit'){
-     if(p.box)features.push('Box');
-     features.push(p.weight.replace('very','Very weighty'))
+     if(p.read)features.push('§S§');
+     if(p.picture)features.push('§P§');
+     if(p.box)features.push('§B§');
    }else features.push('Protected');
    let tr=document.createElement('tr');
    if(p.type==='unit'||p.type==='review'){
@@ -500,7 +507,7 @@ function renderPlan(){
      let status=done?'':current?'CURRENT':next?'NEXT UP':'';
      tr.className=done?'plan-complete':(current?'plan-current':(next?'plan-next':''));
      let dataAttr=p.type==='unit'?`data-unit-index="${p.unitIndex}"`:`data-review-index="${p.reviewIndex}"`;
-     tr.innerHTML=`<td><label class="plan-check-label"><input type="checkbox" class="plan-done-check" data-plan-type="${p.type}" ${dataAttr} ${done?'checked':''}><span class="plan-label-wrap"><b>${esc(p.label)}</b>${status?`<span class="plan-status">${status}</span>`:''}${p.type==='unit'&&p.readBefore?`<span class="plan-read-alert">⚠ READ SCRIPTURE BEFORE PARAGRAPH</span>`:''}${p.type==='unit'&&p.readAfter?`<span class="plan-read-alert after">⚠ READ SCRIPTURE AFTER PARAGRAPH</span>`:''}</span></label></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
+     tr.innerHTML=`<td><label class="plan-check-label"><input type="checkbox" class="plan-done-check" data-plan-type="${p.type}" ${dataAttr} ${done?'checked':''}><span class="plan-label-wrap"><b>${esc(p.label)}${p.type==='unit'?` - ${p.weight==='very'?'Very Weighty':p.weight.charAt(0).toUpperCase()+p.weight.slice(1)}`:''}</b>${status?`<span class="plan-status">${status}</span>`:''}${p.type==='unit'&&p.readBefore?`<span class="plan-read-alert">⚠ READ SCRIPTURE BEFORE PARAGRAPH</span>`:''}${p.type==='unit'&&p.readAfter?`<span class="plan-read-alert after">⚠ READ SCRIPTURE AFTER PARAGRAPH</span>`:''}</span></label></td><td>${p.type==='unit'&&(p.read||p.picture||p.box)?`<span class="extras-label">Extras:</span> `:''}${features.map(x=>x==='§S§'?`<span class="plan-symbol" title="Read Scripture">S</span>`:x==='§P§'?`<span class="plan-symbol" title="Picture">P</span>`:x==='§B§'?`<span class="plan-symbol" title="Box">B</span>`:`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
    }else{
      tr.innerHTML=`<td><b>${esc(p.label)}</b></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
    }
