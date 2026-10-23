@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0f172a" />
-<title>Study Pace Timer</title>
+<title>Watchtower Study Pace Timer</title>
 <style>
 :root{--bg:#f8fafc;--panel:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb;--accent2:#1d4ed8;--good:#15803d;--warn:#b45309;--bad:#b91c1c;--chip:#eff6ff;--shadow:0 10px 30px rgba(15,23,42,.08)}
 *{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
@@ -95,6 +95,7 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 #plan .plan-complete .extras-label{color:#fff!important}
 
 #plan .plan-read-alert.after{border-color:#15803d!important;background:#dcfce7!important;color:#14532d!important}
+.planning-notes{width:100%;min-height:145px;box-sizing:border-box;resize:vertical;white-space:pre-wrap;font:inherit;line-height:1.55;padding:12px;border:1px solid #cbd5e1;border-radius:8px}.plan-notes-row td{padding:10px 14px!important;background:#f8fafc!important}.plan-notes-content{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:14px}@media print{.plan-notes-row{break-inside:avoid}}
 </style>
 
 <style>
@@ -232,7 +233,7 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="brand"><h1>Study Pace Timer</h1><p>Prepare the lesson. Allocate the hour. Conduct with confidence.</p></div>
+    <div class="brand"><h1>Watchtower Study Pace Timer</h1><p>Prepare the lesson. Allocate the hour. Conduct with confidence.</p></div>
     <div class="tabs">
       <button class="tab active" data-view="prepare">1. Prepare</button>
       <button class="tab" data-view="plan">2. Timing Plan</button>
@@ -275,10 +276,12 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
         <div id="shareStatus" class="subtle" style="margin-top:8px"></div>
       </div>
     </div>
+    <div class="panel" style="margin-top:18px"><h2 class="section-title">Introduction</h2><textarea id="introNotes" class="planning-notes" placeholder="Write your introduction here. Press Enter for new lines."></textarea></div>
     <div class="panel" style="margin-top:18px">
       <div class="row" style="justify-content:space-between"><h2 class="section-title" style="margin:0">Discussion units</h2><button class="btn secondary" id="addUnit">+ Add unit</button></div>
       <div id="lessonList" class="lesson-list"></div>
     </div>
+    <div class="panel" style="margin-top:18px"><h2 class="section-title">Conclusion</h2><textarea id="conclusionNotes" class="planning-notes" placeholder="Write your conclusion here. Press Enter for new lines."></textarea></div>
   </section>
 
   <section id="plan" class="view hidden">
@@ -361,7 +364,7 @@ const sampleUnits = [
  {label:'18',section:'KEEP LISTENING TO JEHOVAH',q:'Why should we keep listening at meetings?',weight:'normal'}
 ];
 const defaultReviewQs=['Why should we listen at meetings?','How can brothers who teach at meetings help others to listen?','How can you become a better listener?'];
-let state={title:'Pay Attention to How You Listen',totalMin:60,introMin:1.5,reviewMin:6,conclusionMin:1.25,reviewQs:structuredClone(defaultReviewQs),units:structuredClone(sampleUnits)};
+let state={title:'Pay Attention to How You Listen',totalMin:60,introMin:1.5,reviewMin:6,conclusionMin:1.25,reviewQs:structuredClone(defaultReviewQs),introNotes:'',conclusionNotes:'',units:structuredClone(sampleUnits)};
 let plan=[]; let session={running:false,hold:false,startTs:null,pausedMs:0,pauseStart:null,index:0,manualElapsed:0};
 const $=id=>document.getElementById(id); const weightMap={light:.8,normal:1,weighty:1.3,very:1.6};
 function fmt(sec){sec=Math.max(0,Math.round(sec));return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`}
@@ -380,8 +383,8 @@ function safeFilename(name){return (name||'study-lesson').replace(/[^a-z0-9-_]+/
 function lessonExportObject(){return {format:'study-pace-timer',version:1,exportedAt:new Date().toISOString(),lesson:structuredClone(state)}}
 function makeLessonFile(){const data=JSON.stringify(lessonExportObject(),null,2);return new File([data],safeFilename(state.title)+'.study-pacer.json',{type:'application/json'})}
 function downloadLessonFile(){const file=makeLessonFile(),url=URL.createObjectURL(file),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('shareStatus').textContent='Lesson file saved. Send this file to the other device, then use Open lesson file there.'}
-async function shareLessonFile(){const file=makeLessonFile();try{if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){await navigator.share({title:state.title,text:'Prepared Study Pace Timer lesson',files:[file]});$('shareStatus').textContent='Share sheet opened.'}else{downloadLessonFile();$('shareStatus').textContent='Direct file sharing is not supported by this browser, so the lesson file was saved instead.'}}catch(e){if(e&&e.name==='AbortError')return;console.error(e);downloadLessonFile()}}
-function applyImportedLesson(obj){let incoming=obj&&obj.format==='study-pace-timer'?obj.lesson:obj;if(!incoming||!Array.isArray(incoming.units))throw new Error('This is not a valid Study Pace Timer lesson file.');state={title:String(incoming.title||'Imported lesson'),totalMin:+incoming.totalMin||60,introMin:Number.isFinite(+incoming.introMin)?+incoming.introMin:1.5,reviewMin:Number.isFinite(+incoming.reviewMin)?+incoming.reviewMin:6,conclusionMin:Number.isFinite(+incoming.conclusionMin)?+incoming.conclusionMin:1.25,reviewQs:Array.isArray(incoming.reviewQs)&&incoming.reviewQs.length?incoming.reviewQs.slice(0,3):structuredClone(defaultReviewQs),reviewDone:Array.isArray(incoming.reviewDone)?incoming.reviewDone.slice(0,3).map(Boolean):[],units:incoming.units.map(normalizeUnit)};save();syncTop();renderUnits();calculatePlan();resetSession();$('shareStatus').textContent=`Opened lesson file: ${state.title}`}
+async function shareLessonFile(){const file=makeLessonFile();try{if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){await navigator.share({title:state.title,text:'Prepared Watchtower Study Pace Timer lesson',files:[file]});$('shareStatus').textContent='Share sheet opened.'}else{downloadLessonFile();$('shareStatus').textContent='Direct file sharing is not supported by this browser, so the lesson file was saved instead.'}}catch(e){if(e&&e.name==='AbortError')return;console.error(e);downloadLessonFile()}}
+function applyImportedLesson(obj){let incoming=obj&&obj.format==='study-pace-timer'?obj.lesson:obj;if(!incoming||!Array.isArray(incoming.units))throw new Error('This is not a valid Watchtower Study Pace Timer lesson file.');state={title:String(incoming.title||'Imported lesson'),totalMin:+incoming.totalMin||60,introMin:Number.isFinite(+incoming.introMin)?+incoming.introMin:1.5,reviewMin:Number.isFinite(+incoming.reviewMin)?+incoming.reviewMin:6,conclusionMin:Number.isFinite(+incoming.conclusionMin)?+incoming.conclusionMin:1.25,reviewQs:Array.isArray(incoming.reviewQs)&&incoming.reviewQs.length?incoming.reviewQs.slice(0,3):structuredClone(defaultReviewQs),introNotes:String(incoming.introNotes||''),conclusionNotes:String(incoming.conclusionNotes||''),reviewDone:Array.isArray(incoming.reviewDone)?incoming.reviewDone.slice(0,3).map(Boolean):[],units:incoming.units.map(normalizeUnit)};save();syncTop();renderUnits();calculatePlan();resetSession();$('shareStatus').textContent=`Opened lesson file: ${state.title}`}
 function readLessonFileText(file){
   if(file && typeof file.text==='function'){
     return file.text().catch(()=>new Promise((resolve,reject)=>{
@@ -419,13 +422,14 @@ function load(){
       if(backup&&Array.isArray(backup.units))state=backup;
     }catch(_){}
   }
+  state.introNotes=String(state.introNotes||'');state.conclusionNotes=String(state.conclusionNotes||'');
   if(!Array.isArray(state.reviewQs)||!state.reviewQs.length)state.reviewQs=structuredClone(defaultReviewQs);
   if(!Array.isArray(state.reviewDone))state.reviewDone=state.reviewQs.map(()=>false);
   while(state.reviewDone.length<state.reviewQs.length)state.reviewDone.push(false);
   state.reviewDone=state.reviewDone.slice(0,state.reviewQs.length).map(Boolean);
   if(Array.isArray(state.units))state.units=state.units.map(normalizeUnit);
 }
-function syncTop(){ $('titleInput').value=state.title;$('totalMin').value=state.totalMin;$('introMin').value=state.introMin;$('reviewMin').value=state.reviewMin;$('conclusionMin').value=state.conclusionMin; updateMetrics();}
+function syncTop(){ $('introNotes').value=state.introNotes||'';$('conclusionNotes').value=state.conclusionNotes||''; $('titleInput').value=state.title;$('totalMin').value=state.totalMin;$('introMin').value=state.introMin;$('reviewMin').value=state.reviewMin;$('conclusionMin').value=state.conclusionMin; updateMetrics();}
 function makeUid(){return 'u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
 function normalizeUnit(u){return {uid:u.uid||makeUid(),label:u.label||'New',section:u.section||'',q:u.q||'',weight:u.weight||'normal',read:!!u.read,readBefore:!!u.readBefore,readAfter:!!u.readAfter,picture:!!u.picture,box:!!u.box,locked:!!u.locked,manualSec:u.manualSec??null,done:!!u.done}}
 function countParts(q){let m=(q.match(/\([abc]\)/gi)||[]).length; return Math.max(1,m)}
@@ -463,9 +467,9 @@ function renderUnits(){const el=$('lessonList');el.innerHTML='';let lastSection=
 function toggle(i,k,v){state.units[i][k]=v;save();renderUnits();updateMetrics()}
 function calculatePlan(){state.units=state.units.map(normalizeUnit);let total=+state.totalMin*60,intro=+state.introMin*60,review=+state.reviewMin*60,concl=+state.conclusionMin*60;let available=total-intro-review-concl;if(available<60)available=60;
  let lockedTotal=0, flex=[]; state.units.forEach((u,i)=>{if(u.locked&&u.manualSec!=null)lockedTotal+=u.manualSec;else flex.push(i)});let flexAvail=Math.max(0,available-lockedTotal);let totalOver=flex.reduce((a,i)=>a+overhead(state.units[i]),0);let basePool=Math.max(0,flexAvail-totalOver);let pts=flex.reduce((a,i)=>a+weightMap[state.units[i].weight],0)||1;
- plan=[];let cumulative=intro; plan.push({type:'intro',label:'Introduction',q:'Introduce the lesson and focus.',sec:intro,target:cumulative,plannedTarget:cumulative,locked:true});
+ plan=[];let cumulative=intro; plan.push({type:'intro',label:'Introduction',q:state.introNotes||'Introduce the lesson and focus.',sec:intro,target:cumulative,plannedTarget:cumulative,locked:true});
  state.units.forEach((u,i)=>{let sec=u.locked&&u.manualSec!=null?u.manualSec:overhead(u)+basePool*(weightMap[u.weight]/pts);sec=Math.max(55,sec);cumulative+=sec;plan.push({type:'unit',unitIndex:i,label:`Paragraph ${u.label}`,section:u.section,q:u.q,sec,target:cumulative,plannedTarget:cumulative,locked:u.locked,read:u.read,readBefore:u.readBefore,readAfter:u.readAfter,picture:u.picture,box:u.box,weight:u.weight});});
- let reviewQs=state.reviewQs||defaultReviewQs;let perReview=review/reviewQs.length;reviewQs.forEach((q,j)=>{cumulative+=perReview;plan.push({type:'review',reviewIndex:j,label:`Review ${j+1}`,q,sec:perReview,target:cumulative,plannedTarget:cumulative,locked:true})});cumulative+=concl;plan.push({type:'conclusion',label:'Conclusion',q:'Conclude the study and transition smoothly.',sec:concl,target:cumulative,plannedTarget:cumulative,locked:true});
+ let reviewQs=state.reviewQs||defaultReviewQs;let perReview=review/reviewQs.length;reviewQs.forEach((q,j)=>{cumulative+=perReview;plan.push({type:'review',reviewIndex:j,label:`Review ${j+1}`,q,sec:perReview,target:cumulative,plannedTarget:cumulative,locked:true})});cumulative+=concl;plan.push({type:'conclusion',label:'Conclusion',q:state.conclusionNotes||'Conclude the study and transition smoothly.',sec:concl,target:cumulative,plannedTarget:cumulative,locked:true});
  // normalize drift to total by adjusting unlocked units
  let drift=total-cumulative;if(Math.abs(drift)>.5){let ids=plan.map((p,i)=>({p,i})).filter(x=>x.p.type==='unit'&&!x.p.locked);if(ids.length){let each=drift/ids.length;ids.forEach(x=>x.p.sec=Math.max(45,x.p.sec+each));let c=0;plan.forEach(p=>{c+=p.sec;p.target=c;p.plannedTarget=c})}}
  renderPlan();return plan}
@@ -510,7 +514,13 @@ function renderPlan(){
    }else{
      tr.innerHTML=`<td><b>${esc(p.label)}</b></td><td>${features.map(x=>`<span class="chip gray">${esc(x)}</span>`).join(' ')}</td><td class="num">${fmt(p.sec)}</td><td class="num">${fmt(p.plannedTarget??p.target)}</td>`;
    }
-   body.appendChild(tr)
+   body.appendChild(tr);
+   if((p.type==='intro'||p.type==='conclusion') && p.q){
+     const notesRow=document.createElement('tr');notesRow.className='plan-notes-row';
+     const cell=document.createElement('td');cell.colSpan=4;
+     const notes=document.createElement('div');notes.className='plan-notes-content';notes.textContent=p.q;
+     cell.appendChild(notes);notesRow.appendChild(cell);body.appendChild(notesRow);
+   }
  });
  body.querySelectorAll('.plan-done-check').forEach(cb=>cb.addEventListener('change',e=>{
    const el=e.currentTarget;
@@ -560,6 +570,7 @@ async function importFromUrl(){
 
 
 load();syncTop();renderUnits();calculatePlan();renderConduct();
+['introNotes','conclusionNotes'].forEach(id=>$(id).addEventListener('input',()=>{state[id]=$(id).value;save();calculatePlan()}));
 // Browser-local recovery: keep the current lesson/settings available even if
 // Render sleeps or restarts. Each browser/device has its own independent copy.
 window.addEventListener('pagehide',save);
